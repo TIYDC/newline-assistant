@@ -1,0 +1,21 @@
+{
+  "manifest_version": 2,
+
+  "name": "TIYO Assistant",
+  "description": "An in-page assistant for instructors using The Iron Yard Online",
+  "version": "1.0",
+
+  "permissions": [
+    "activeTab"
+  ],
+  "web_accessible_resources": [
+    "template.html"
+  ],
+  "content_scripts": [
+    {
+      "matches": ["https://online.theironyard.com/*"],
+      "js" : ["jquery-2.2.3.js", "tiyo-assistant.js"],
+      "css" : ["tiyo-assistant.css"]
+    }
+  ]
+}
