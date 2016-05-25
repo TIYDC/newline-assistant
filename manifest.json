@@ -9,13 +9,17 @@
     "activeTab"
   ],
   "web_accessible_resources": [
-    "template.html"
+    "src/templates/*"
   ],
   "content_scripts": [
     {
       "matches": ["https://online.theironyard.com/*"],
-      "js" : ["jquery-2.2.3.js", "tiyo-assistant.js"],
-      "css" : ["tiyo-assistant.css"]
+      "js" : [
+        "vendor/jquery-2.2.3.js",
+        "src/scripts/tiyo-assistant.js",
+        "src/scripts/modules/student-list.js"
+      ],
+      "css" : ["src/styles/tiyo-assistant.css"]
     }
   ]
 }
