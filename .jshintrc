@@ -62,9 +62,10 @@
     "validthis"     : false,     // true: Tolerate using this in a non-constructor function
 
     // Environments
-    "browser"       : true,     // Web Browser (window, document, etc)
-    "devel"         : true,     // Development/debugging (alert, confirm, etc)
-    "jquery"        : true,     // jQuery
+    "browser"       : true,
+    "node"          : true,
+    "devel"         : true,
+    "jquery"        : true,
 
     // Custom Globals
     "globals"       : {

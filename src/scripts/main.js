@@ -11,8 +11,7 @@
     let dataLoaded = false;
     let uiLoaded = false;
 
-    const MAIN_TEMPLATE = 'src/templates/main.html';
-
+    const MAIN_TEMPLATE = 'build/templates/main.html';
 
     function main() {
         console.info('Initializing TIYO assistant');
