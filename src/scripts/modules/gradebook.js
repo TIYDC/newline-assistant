@@ -190,7 +190,8 @@
 
                             var status = {
                                 text: qs( qsa( row, 'td' )[ 2 ], 'label' ).innerText.trim(),
-                                href: qs( qsa( row, 'td' )[ 1 ], 'a' ).getAttribute( 'href' )
+                                href: qs( qsa( row, 'td' )[ 1 ], 'a' ).getAttribute( 'href' ),
+                                submitted_at: qsa( row, 'td' )[3].innerText.trim()
                             };
 
                             if ( status.text !== 'Retracted' ) {
