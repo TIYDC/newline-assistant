@@ -21,11 +21,7 @@
             .then(function callModuleInits(data) {
                 tiyoData = data;
                 dataLoaded = true;
-                console.log('Data gathered, calling init methods', data);
-                modulesLoaded.forEach(function(mod) {
-                    doInit(mod);
-                });
-
+                console.log('Data gathered', data);
                 return $.get(chrome.extension.getURL(MAIN_TEMPLATE));
             })
             .then(function callModuleRenders(html) {
@@ -72,14 +68,7 @@
         console.info('loading module', api);
 
         modulesLoaded.push(api);
-        doInit(api);
         doRender(api);
-    }
-
-    function doInit(mod) {
-        if (dataLoaded && typeof(mod.init) === 'function') {
-            mod.init(tiyoData);
-        }
     }
 
     function doRender(mod) {
