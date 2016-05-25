@@ -9,3 +9,28 @@
     box-shadow: 2px 3px 3px #444;
     z-index: 999;
 }
+
+.tiyo-assistant .table th, .tiyo-assistant .table td  {
+  font-size: 0.8em;
+  padding: 0.5rem !important;
+}
+
+.tiyo-assistant table td.u {
+  background-color: #e74c3c;
+}
+
+.tiyo-assistant table td.i {
+  background-color: #e74c3c;
+}
+
+.tiyo-assistant table td.e {
+  background-color: #6fbbb7;
+}
+
+.tiyo-assistant table td.s {
+  background-color: #6fbbb7;
+}
+
+.tiyo-assistant table td.grade a {
+  color:white;
+}

@@ -17,7 +17,8 @@
       "js" : [
         "vendor/jquery-2.2.3.js",
         "src/scripts/tiyo-assistant.js",
-        "src/scripts/modules/student-list.js"
+        "src/scripts/modules/student-list.js",
+        "src/scripts/modules/gradebook.js"
       ],
       "css" : ["src/styles/tiyo-assistant.css"]
     }
