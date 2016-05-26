@@ -21,17 +21,18 @@
         addFontAwesomeStyleSheet();
 
         collectData()
-            .then(function callModuleInits(data) {
+            .then(function getNavUI(data) {
                 tiyoData = data;
                 dataLoaded = true;
                 console.log('Data gathered', data);
                 return $.get(chrome.extension.getURL(NAV_TEMPLATE));
             })
-            .then(function(html) {
+            .then(function getMainUI(html) {
                 navUI = $(html);
                 $('.main .header:first').append(navUI);
 
                 modulesLoaded.forEach(addNavIcon);
+                navUI.on('click', 'li', showModuleUI);
 
                 return $.get(chrome.extension.getURL(MAIN_TEMPLATE));
             })
@@ -39,6 +40,9 @@
                 mainUI = $(html);
                 $('.breadcrumb').after(mainUI);
                 uiLoaded = true;
+
+                setupContentClose();
+
                 console.log('UI base loaded, calling render methods', mainUI);
                 modulesLoaded.forEach(function(mod) {
                     doRender(mod);
@@ -96,8 +100,27 @@
         if (!navUI) { return; }
 
         navUI.find('ul').append(
-            `<li><i class="fa ${mod.navIcon} fa-lg" aria-hidden="true" data-module='${mod.name}'></i></li>`
+            `<li data-module='${mod.name}'><i class='fa ${mod.navIcon} fa-lg' aria-hidden='true'></i></li>`
         );
+    }
+
+    function showModuleUI(e) {
+        e.preventDefault();
+        var name = $(this).data('module');
+        var mod = modulesLoaded.filter(function(m) { return m.name === name;});
+        if (!mod.length) { return; }
+
+        console.log('showing ', mod[0]);
+        $('.tiyo-assistant-module').hide();
+        $(`[data-module="${mod[0].name}"]`).show().trigger('showing');
+        mainUI.slideDown(1000);
+    }
+
+    function setupContentClose() {
+        $('.tiyo-assistant-close').click(function closeContent(e) {
+            e.preventDefault();
+            mainUI.slideUp(1000);
+        });
     }
 
     function loadModule(api) {
@@ -120,7 +143,7 @@
     }
 
     function createModuleWrapper(mod) {
-        var elem = $(`<article id='tiyo-assistant-${mod.name}'>`).addClass('tiyo-assistant-module');
+        var elem = $(`<article data-module='${mod.name}'>`).addClass('tiyo-assistant-module');
         $(mainUI).find('.tiyo-assistant-content').append(elem);
         return elem;
     }
