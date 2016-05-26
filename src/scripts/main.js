@@ -108,10 +108,7 @@
 
         modulesLoaded.push(api);
 
-        if (navUI) {
-            addNavIcon(api);
-        }
-
+        addNavIcon(api);
         doRender(api);
     }
 
