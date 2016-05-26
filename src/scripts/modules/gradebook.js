@@ -11,6 +11,8 @@
     // path
     let user = eval( $( "#IntercomSettingsScriptTag" ).text() );
 
+    let uiBuilt = false;
+
     const shortGradeNames = {
         'Exceeds expectations': 'E',
         'Complete and satisfactory': 'S',
@@ -26,21 +28,16 @@
     ];
 
     function main( data, el, c ) {
-        $( '#generate-score-card' ).click( function() {
-            console.info( "DDOSsing  TIYO" );
-            $( '#generate-score-card' ).text( "Processing" ).prop( "disabled", true );
-            generateGradebook( data.group.id, 118, function( students, assignments ) {
-                buildGradebookUI( el, students, assignments );
-            } );
-        } );
-
-        $( '#display-gradebook' ).click( function() {
+        $(el).on('showing', function() {
+            if (uiBuilt) { return; }
+            
             var students = JSON.parse( localStorage.getItem( 'cachedStudents' ) );
             var assignments = JSON.parse( localStorage.getItem( 'cachedAssignments' ) );
             students = calculateGrades( students );
             console.log(students);
             buildGradebookUI( el, students, assignments );
-        } );
+            uiBuilt = true;
+        });
     }
 
 
@@ -67,6 +64,16 @@
 
     function buildGradebookUI( $main, data, assignments ) {
         $main.html( '' );
+        $main.append('<button type="button" class="btn btn-secondary" id="generate-score-card" name="generateScoreCard">Refresh GB</button></li>');
+
+        $( '#generate-score-card' ).click( function() {
+            console.info( "DDOSsing  TIYO" );
+            $( '#generate-score-card' ).text( "Processing" ).prop( "disabled", true );
+            generateGradebook( data.group.id, 118, function( students, assignments ) {
+                buildGradebookUI( el, students, assignments );
+            } );
+        } );
+
         $main.append( '<table class=\"table table-condensed\"><tbody></tbody></table>' );
         var $table = $main.find( 'table' );
         var row = $( '<tr>' );
