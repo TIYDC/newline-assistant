@@ -30,6 +30,9 @@
             .then(function(html) {
                 navUI = $(html);
                 $('.main .header:first').append(navUI);
+
+                modulesLoaded.forEach(addNavIcon);
+
                 return $.get(chrome.extension.getURL(MAIN_TEMPLATE));
             })
             .then(function callModuleRenders(html) {
@@ -89,6 +92,14 @@
         });
     }
 
+    function addNavIcon(mod) {
+        if (!navUI) { return; }
+
+        navUI.find('ul').append(
+            `<li><i class="fa ${mod.navIcon} fa-lg" aria-hidden="true" data-module='${mod.name}'></i></li>`
+        );
+    }
+
     function loadModule(api) {
         if (!api) { return; }
         if (!api.name) { api.name = Date.getTime(); }
@@ -96,6 +107,11 @@
         console.info('loading module', api);
 
         modulesLoaded.push(api);
+
+        if (navUI) {
+            addNavIcon(api);
+        }
+
         doRender(api);
     }
 

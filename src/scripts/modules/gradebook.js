@@ -3,6 +3,7 @@
 
     tiy.loadModule( {
         name: 'gradebook',
+        navIcon: 'fa-book',
         render: main
     } );
 
