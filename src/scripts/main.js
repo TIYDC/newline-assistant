@@ -6,31 +6,60 @@
 
     // locals & constants
     let tiyoData = null;
+    let navUI = null;
     let mainUI = null;
     let modulesLoaded = [];
     let dataLoaded = false;
     let uiLoaded = false;
 
     const MAIN_TEMPLATE = 'build/templates/main.html';
+    const NAV_TEMPLATE = 'build/templates/nav.html';
 
     function main() {
         console.info('Initializing TIYO assistant');
+
+        addFontAwesomeStyleSheet();
 
         collectData()
             .then(function callModuleInits(data) {
                 tiyoData = data;
                 dataLoaded = true;
                 console.log('Data gathered', data);
+                return $.get(chrome.extension.getURL(NAV_TEMPLATE));
+            })
+            .then(function(html) {
+                navUI = $(html);
+                $('.main .header:first').append(navUI);
                 return $.get(chrome.extension.getURL(MAIN_TEMPLATE));
             })
             .then(function callModuleRenders(html) {
-                mainUI = $(html).appendTo('body');
+                mainUI = $(html);
+                $('.breadcrumb').after(mainUI);
                 uiLoaded = true;
                 console.log('UI base loaded, calling render methods', mainUI);
                 modulesLoaded.forEach(function(mod) {
                     doRender(mod);
                 });
             });
+    }
+
+    /**
+     * Chrome extensions have issues with access files from css like fonts, so
+     * we need to embed the styelsheet using the chromse extension URL, which
+     * is dynamically generated. The remainder of the FA styles are in a static
+     * stylesheet in /vendor
+     */
+    function addFontAwesomeStyleSheet() {
+        $('head').append(
+            $('<style>')
+                .attr('type', 'text/css')
+                .text(
+                    `@font-face {
+                        font-family: FontAwesome;
+                        src: url('${chrome.extension.getURL('vendor/fontawesome-webfont.woff')}');
+                    }`
+                )
+        );
     }
 
     function collectData() {
