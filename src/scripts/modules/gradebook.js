@@ -10,7 +10,6 @@
     // HACK so we can not show the logged in instructor if they belong to the
     // path
     let user = eval( $( "#IntercomSettingsScriptTag" ).text() );
-
     let uiBuilt = false;
 
     const shortGradeNames = {
@@ -27,50 +26,48 @@
         'Not graded'
     ];
 
-    function main( data, el, c ) {
-        $(el).on('showing', function() {
-            if (uiBuilt) { return; }
-            
+    function main( sessionData, el ) {
+        $( el ).on( 'showing', function() {
+            if ( uiBuilt ) {
+                return;
+            }
+
             var students = JSON.parse( localStorage.getItem( 'cachedStudents' ) );
             var assignments = JSON.parse( localStorage.getItem( 'cachedAssignments' ) );
-            students = calculateGrades( students );
-            console.log(students);
-            buildGradebookUI( el, students, assignments );
+            buildGradebookUI( sessionData, el, students, assignments );
             uiBuilt = true;
-        });
+        } );
     }
 
+    var calculateGrades = ( students = {} ) => {
+        if ( !students ) {
+            return;
+        }
 
-    // TODO Adapt math to New Data Structure
-    var calculateGrades = students => {
-        var status = '';
-        Object.keys( students ).map( ( name, i ) => {
-            var student = students[ name ];
+        Object.keys( students ).map( ( studentName ) => {
+            var student = students[ studentName ];
             var submissions = Object.keys( student );
-            var okCount = submissions.filter( t => {
-              console.log(student[ t ].submission.text,   okGrades.includes( student[ t ].submission.text ));
 
-              return okGrades.includes( student[ t ].submission.text );
-            })
+            var okCount = submissions.filter( assignmentName => {
+                return okGrades.includes( student[ assignmentName ].submission.text );
+            } );
 
-            var percent = okCount.length / submissions.length * 100;
-            console.log(percent);
-            student.grade = percent.toFixed(0);
+            var grade = okCount.length / submissions.length * 100;
+            student.grade = grade.toFixed( 0 );
         } );
-
-
         return students;
     };
 
-    function buildGradebookUI( $main, data, assignments ) {
+    function buildGradebookUI( sessionData, $main, students, assignments ) {
         $main.html( '' );
-        $main.append('<button type="button" class="btn btn-secondary" id="generate-score-card" name="generateScoreCard">Refresh GB</button></li>');
+        $main.append( '<button type="button" class="btn btn-secondary" id="generate-score-card" name="generateScoreCard">Refresh GB</button></li>' );
 
         $( '#generate-score-card' ).click( function() {
             console.info( "DDOSsing  TIYO" );
             $( '#generate-score-card' ).text( "Processing" ).prop( "disabled", true );
-            generateGradebook( data.group.id, 118, function( students, assignments ) {
-                buildGradebookUI( el, students, assignments );
+            console.log( sessionData );
+            generateGradebook( sessionData.group.id, sessionData.path.id, function( students, assignments ) {
+                buildGradebookUI( sessionData, $main, students, assignments );
             } );
         } );
 
@@ -79,47 +76,54 @@
         var row = $( '<tr>' );
         $table.prepend( '<thead>' );
         row.append( $( '<th>' ).append( "Student" ) );
+
         for ( var assignment in assignments ) {
-            row.append( $( '<th>' ).append( $( '<a>' )
-                .text( assignment.slice( 0, 1 ) )
-                .prop( 'href', assignments[ assignment ].href )
-                .prop( 'title', assignment )
-            ) );
+            if ( assignments.hasOwnProperty( assignment ) ) {
+                row.append( $( '<th>' ).append( $( '<a>' )
+                    .text( assignment.slice( 0, 1 ) )
+                    .prop( 'href', assignments[ assignment ].href )
+                    .prop( 'title', assignment )
+                ) );
+            }
         }
+
         $table.find( 'thead' ).append( row );
 
-        for ( var student in data ) {
-            // Never display the instructor in the gradebook
-            if ( user.name === student ) {
-                continue;
-            }
-
-            var studentRow = $( '<tr>' );
-
-            studentRow.append(
-              $( '<td>' ).append(
-                $('<a>')
-                  .text(student)
-                  .prop("href", "#")
-                  .prop('title', `Grade: ${data[student].grade}%`)
-              )
-            );
-
-            for ( assignment in assignments ) {
-                if ( data[ student ][ assignment ] ) {
-                    var submission = data[ student ][ assignment ].submission;
-                    studentRow.append( $( '<td>' ).append(
-                        $( '<a>' ).text( shortGradeNames[ submission.text ] )
-                        .prop( 'href', submission.href )
-                        .prop( 'target', 'blank' )
-                        .prop( 'title', assignment )
-
-                    ).addClass( `grade ${shortGradeNames[submission.text].toLowerCase()}` ) );
-                } else {
-                    studentRow.append( $( '<td>' ) );
+        for ( var studentName in students ) {
+            if ( students.hasOwnProperty( studentName ) ) {
+                // Never display the instructor in the gradebook
+                if ( user.name === studentName ) {
+                    continue;
                 }
+
+                var student = students[ studentName ];
+                var studentRow = $( '<tr>' );
+
+                studentRow.append(
+                    $( '<td>' ).append(
+                        $( '<a>' )
+                        .text( studentName )
+                        .prop( "href", "#" )
+                        .prop( 'title', `Grade: ${student.grade}%` )
+                    )
+                );
+
+                for ( assignment in assignments ) {
+                    if ( student[ assignment ] ) {
+                        var submission = student[ assignment ].submission;
+                        studentRow.append( $( '<td>' ).append(
+                            $( '<a>' ).text( shortGradeNames[ submission.text ] )
+                            .prop( 'href', submission.href )
+                            .prop( 'target', 'blank' )
+                            .prop( 'title', assignment )
+
+                        ).addClass( `grade ${shortGradeNames[submission.text].toLowerCase()}` ) );
+                    } else {
+                        studentRow.append( $( '<td>' ) );
+                    }
+                }
+                $table.append( studentRow );
             }
-            $table.append( studentRow );
         }
     }
 
@@ -199,7 +203,7 @@
                             var status = {
                                 text: qs( qsa( row, 'td' )[ 2 ], 'label' ).innerText.trim(),
                                 href: qs( qsa( row, 'td' )[ 1 ], 'a' ).getAttribute( 'href' ),
-                                submitted_at: qsa( row, 'td' )[3].innerText.trim()
+                                submitted_at: qsa( row, 'td' )[ 3 ].innerText.trim()
                             };
 
                             if ( status.text !== 'Retracted' ) {
@@ -214,6 +218,7 @@
                     res();
                 } );
             } ) ) ).then( () => {
+                students = calculateGrades( students );
                 localStorage.setItem( 'cachedStudents', JSON.stringify( students ) );
                 localStorage.setItem( 'cachedAssignments', JSON.stringify( assignments ) );
                 callback( students, assignments );
