@@ -78,10 +78,10 @@
         // Question, What is the the best practice for building an uniq array of objects in JS.
         Object.keys( students ).map( ( studentName ) => {
             var student = students[ studentName ];
-            var submissions = Object.keys( student );
+            var submissions = Object.keys( student.submissions );
 
             var okCount = submissions.filter( assignmentName => {
-                return okGrades.includes( student[ assignmentName ].submission.grade );
+                return okGrades.includes( student.submissions[ assignmentName ].submission.grade );
             } );
 
             var grade = okCount.length / submissions.length * 100;
@@ -121,8 +121,8 @@
         );
 
         for ( var assignment in assignments ) {
-            if ( student[ assignment ] ) {
-                var submission = student[ assignment ].submission;
+            if ( student.submissions[ assignment ] ) {
+                var submission = student.submissions[ assignment ].submission;
 
                 studentRow.append( $( '<td>' ).append(
                     $( '<a>' ).text( shortGradeNames[ submission.grade ] )
@@ -217,7 +217,12 @@
                     studentPage.innerHTML = html;
 
                     var name = qs( studentPage, 'h1 strong' ).innerText;
-                    students[ name ] = {};
+
+                    students[ name ] = {
+                      name: name,
+                      percentage: null,
+                      submissions: {}
+                    };
 
                     qsa( studentPage, '#assignments table tbody tr' ).map(
                         row => {
@@ -235,8 +240,7 @@
                             };
 
                             if ( submission.grade !== 'Retracted' ) {
-                                students[ name ][ assignment.name ] = {
-                                    name: name,
+                                students[ name ].submissions[ assignment.name ] = {
                                     assignment: assignment,
                                     submission: submission
                                 };
