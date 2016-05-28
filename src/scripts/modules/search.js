@@ -61,6 +61,30 @@
         $ui.find('.tiyo-assistant-search-refresh').attr('disabled', 'disabled');
         $ui.find('.tiyo-assistant-notice').text('Recreating... this could take a while.');
 
+        let indexData = {
+            createTime: Date.now(),
+            index: {}
+        };
+        let units = [];
+
+        $('.unit').each(function() {
+            let unit = {
+                id: Number($(this).data('id').match(/\/([0-9]+)$/)[1]),
+                lessons: [],
+                assignments: []
+            };
+            $(this).find('.lesson').each(function() {
+                unit.lessons.push(Number($(this).data('id').match(/\/([0-9]+)$/)[1]));
+            });
+            $(this).find('.assignment').each(function() {
+                unit.assignments.push(Number($(this).data('id').match(/\/([0-9]+)$/)[1]));
+            });
+
+            units.push(unit);
+        });
+
+        console.log('gathered all unit & content id\'s', units);
+
         //     {
         //         "157": {
         //             "createTime": 1234567890,
