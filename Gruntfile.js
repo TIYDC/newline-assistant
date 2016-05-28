@@ -26,7 +26,10 @@ module.exports = function(grunt) {
         concat: {
             js: {
                 src: ['src/scripts/main.js', 'src/scripts/**/*.js'],
-                dest: 'build/tiyo-assistant.js'
+                dest: 'build/tiyo-assistant.js',
+                options: {
+                    sourceMap: true
+                }
             }
         },
 
