@@ -70,30 +70,44 @@
     }
 
     function collectData() {
-        let data = {
+        let path = window.location.pathname.split(/\//),
+            data = {
+                path: null,
                 group: null,
                 students: []
             },
             group = $('.card-block dt:contains("Group")').next().find('a');
 
-        if (!group.length) { return; }
+        if (path.length === 4 && path[2] === 'paths') {
+            data.path = {
+                id: Number(path[3]),
+                title: $('.content .breadcrumb li:eq(1)').text()
+            };
+        }
 
-        data.group = {
-            title: group.text(),
-            id: Number(group.attr('href').match(/\/([0-9]+)/)[1])
-        };
+        let p;
+        if (group.length) {
+            data.group = {
+                title: group.text(),
+                id: Number(group.attr('href').match(/\/([0-9]+)/)[1])
+            };
 
-        return $.get(group.attr('href')).then(function(html) {
-            let students = $(html).find('#students tr td:first-child a');
-            students.each(function() {
-                let studentElem = $(this).find('.profile-placeholder-medium, img').remove().end();
-                data.students.push({
-                    id: Number(studentElem.attr('href').match(/\/([0-9]+)/)[1]),
-                    name: studentElem.text()
+            p = $.get(group.attr('href')).then(function(html) {
+                let students = $(html).find('#students tr td:first-child a');
+                students.each(function() {
+                    let studentElem = $(this).find('.profile-placeholder-medium, img').remove().end();
+                    data.students.push({
+                        id: Number(studentElem.attr('href').match(/\/([0-9]+)/)[1]),
+                        name: studentElem.text()
+                    });
                 });
+                return data;
             });
-            return data;
-        });
+        } else {
+            p = Promise.resolve(data);
+        }
+
+        return p;
     }
 
     function addNavIcon(mod) {
