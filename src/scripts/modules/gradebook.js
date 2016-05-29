@@ -146,18 +146,15 @@
         $table.find( 'thead' )
             .append( buildAssignmentsHeader( assignments ) );
 
-        for ( var studentName in students ) {
-            if ( students.hasOwnProperty( studentName ) ) {
+        const orderedStudents = Object.keys( students ).sort();
+        for ( var i = 0; i < orderedStudents.length; i++ ) {
                 // Never display the instructor in the gradebook
-                if ( user.name === studentName ) {
-                    continue;
-                }
+            if ( user.name === orderedStudents[i] ) { continue; }
 
-                var student = students[ studentName ];
+            var student = students[ orderedStudents[i] ];
                 $table.append( buildStudentRow( student, assignments ) );
             }
         }
-    }
 
     // Data Management +++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
