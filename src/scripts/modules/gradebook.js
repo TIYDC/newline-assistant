@@ -97,6 +97,7 @@
     function buildAssignmentsHeader( assignments ) {
         var row = $( '<tr>' );
         row.append( $( '<th>' ).append( "Student" ) );
+        row.append( $( '<th>' ).append( "Grade" ) );
 
         for ( let assignment of assignments ) {
             row.append( $( '<th>' ).append( $( '<a>' )
@@ -119,6 +120,10 @@
                 .prop( "href", "#" )
                 .prop( 'title', `Grade: ${student.percentage}%` )
             )
+        );
+
+        studentRow.append(
+            $( '<td>' ).text(`${student.percentage}%` )
         );
 
         for ( let assignment of assignments ) {
@@ -148,13 +153,13 @@
 
         const orderedStudents = Object.keys( students ).sort();
         for ( var i = 0; i < orderedStudents.length; i++ ) {
-                // Never display the instructor in the gradebook
+            // Never display the instructor in the gradebook
             if ( user.name === orderedStudents[i] ) { continue; }
 
             var student = students[ orderedStudents[i] ];
-                $table.append( buildStudentRow( student, assignments ) );
-            }
+            $table.append( buildStudentRow( student, assignments ) );
         }
+    }
 
     // Data Management +++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
