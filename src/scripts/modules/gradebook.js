@@ -53,15 +53,17 @@
                 return;
             }
 
-            var students = JSON.parse( localStorage.getItem( 'cachedStudents' ) );
-            var assignments = JSON.parse( localStorage.getItem( 'cachedAssignments' ) );
+            var gradebookData = JSON.parse( localStorage.getItem( 'cachedGradeBookData' ) );
 
             resetUI( sessionData, $el );
 
-            if (students) {
-              buildGradebookUI( $el, students, assignments );
+            if (gradebookData) {
+              try {
+                buildGradebookUI( $el, gradebookData.students, gradebookData.assignments );
+              } catch (e) {
+                localStorage.removeItem('cachedGradeBookData');
+              }
             }
-
 
             uiBuilt = true;
         } );
@@ -278,9 +280,9 @@
                 } );
 
                 students = calculateGrades( students );
-                localStorage.setItem( 'cachedStudents', JSON.stringify( students ) );
-                localStorage.setItem( 'cachedAssignments', JSON.stringify( assignments ) );
-                callback( students, assignments );
+                gradebookData = {students: students, assignments: assignments}
+                localStorage.setItem( 'cachedGradeBookData', JSON.stringify( gradebookData ) );
+                callback( gradebookData );
             } );
         } );
     }
