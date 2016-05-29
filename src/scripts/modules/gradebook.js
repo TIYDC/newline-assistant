@@ -57,19 +57,19 @@
 
             resetUI( sessionData, $el );
 
-            if (gradebookData) {
-              try {
-                buildGradebookUI( $el, gradebookData.students, gradebookData.assignments );
-              } catch (e) {
-                localStorage.removeItem('cachedGradeBookData');
-              }
-            }  else {
-              console.info( "DDOSsing  TIYO" );
-              $( '#generate-score-card' ).text( "Processing" ).prop( "disabled", true );
-              generateGradebook( sessionData.group.id, sessionData.path.id, function( students, assignments ) {
-                  resetUI( sessionData, $el );
-                  buildGradebookUI( $el, students, assignments );
-              } );
+            if ( gradebookData ) {
+                try {
+                    buildGradebookUI( $el, gradebookData.students, gradebookData.assignments );
+                } catch ( e ) {
+                    localStorage.removeItem( 'cachedGradeBookData' );
+                }
+            } else {
+                console.info( "DDOSsing  TIYO" );
+                $( '#generate-score-card' ).text( "Processing" ).prop( "disabled", true );
+                generateGradebook( sessionData.group.id, sessionData.path.id, function( students, assignments ) {
+                    resetUI( sessionData, $el );
+                    buildGradebookUI( $el, students, assignments );
+                } );
             }
 
             uiBuilt = true;
@@ -81,7 +81,7 @@
         $el.append( tableTemplate );
 
         $( '#generate-score-card' ).click( function() {
-            // This should be extracted out to a seperate function but need to manage scope. 
+            // This should be extracted out to a seperate function but need to manage scope.
             console.info( "DDOSsing  TIYO" );
             $( '#generate-score-card' ).text( "Processing" ).prop( "disabled", true );
             generateGradebook( sessionData.group.id, sessionData.path.id, function( students, assignments ) {
@@ -288,7 +288,10 @@
                 } );
 
                 students = calculateGrades( students );
-                gradebookData = {students: students, assignments: assignments}
+                var gradebookData = {
+                    students: students,
+                    assignments: assignments
+                };
                 localStorage.setItem( 'cachedGradeBookData', JSON.stringify( gradebookData ) );
                 callback( gradebookData );
             } );
