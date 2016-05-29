@@ -42,7 +42,7 @@
 
 
     const ignoredGrades = [
-      'Retracted'
+        'Retracted'
     ];
 
     const timeFormat = "MMM DD, YYYY hh:mm A";
@@ -57,13 +57,17 @@
             var assignments = JSON.parse( localStorage.getItem( 'cachedAssignments' ) );
 
             resetUI( sessionData, $el );
-            buildGradebookUI( $el, students, assignments );
+
+            if (students) {
+              buildGradebookUI( $el, students, assignments );
+            }
+
 
             uiBuilt = true;
         } );
     }
 
-    function resetUI ( sessionData, $el ) {
+    function resetUI( sessionData, $el ) {
         $el.html( '' );
         $el.append( tableTemplate );
 
@@ -77,7 +81,7 @@
         } );
     }
 
-    function calculateGrades ( students ) {
+    function calculateGrades( students ) {
         if ( !students ) {
             return;
         }
@@ -88,7 +92,7 @@
             var submissions = Object.keys( student.submissions );
 
             var okCount = submissions.filter( assignmentName => {
-                return okGrades.includes( student.submissions[ assignmentName ].submission.grade );
+                return okGrades.includes( student.submissions[ assignmentName ].grade );
             } );
 
             var grade = okCount.length / submissions.length * 100;
@@ -101,14 +105,12 @@
         var row = $( '<tr>' );
         row.append( $( '<th>' ).append( "Student" ) );
 
-        for ( var assignment in assignments ) {
-            if ( assignments.hasOwnProperty( assignment ) ) {
-                row.append( $( '<th>' ).append( $( '<a>' )
-                    .text( assignment.slice( 0, 1 ) )
-                    .prop( 'href', assignments[ assignment ].href )
-                    .prop( 'title', assignment )
-                ) );
-            }
+        for ( let assignment of assignments ) {
+            row.append( $( '<th>' ).append( $( '<a>' )
+                .text( assignment.name.slice( 0, 1 ) )
+                .prop( 'href', assignment.href )
+                .prop( 'title', assignment.name )
+            ) );
         }
 
         return row;
@@ -127,16 +129,15 @@
             )
         );
 
-        for ( var assignment in assignments ) {
-            if ( student.submissions[ assignment ] ) {
-                var submission = student.submissions[ assignment ].submission;
-
+        for ( let assignment of assignments ) {
+            let submission = student.submissions[ assignment.name ]
+            console.log( assignment, submission );
+            if ( submission ) {
                 studentRow.append( $( '<td>' ).append(
                     $( '<a>' ).text( shortGradeNames[ submission.grade ] )
                     .prop( 'href', submission.href )
                     .prop( 'target', 'blank' )
-                    .prop( 'title', assignment )
-
+                    .prop( 'title', assignment.name )
                 ).addClass( `grade ${shortGradeNames[submission.grade].toLowerCase()}` ) );
             } else {
                 studentRow.append( $( '<td>' ) );
@@ -216,7 +217,7 @@
 
         Promise.all( [ studentUrls, assignmentTitles ] ).then( ( [ s ] ) => {
             var students = {};
-            var assignments = {};
+            var assignments = [];
 
             Promise.all( s.map( url => new Promise( ( res ) => {
                 $.get( url ).then( html => {
@@ -226,31 +227,44 @@
                     var name = qs( studentPage, 'h1 strong' ).innerText;
 
                     students[ name ] = {
-                      name: name,
-                      percentage: null,
-                      submissions: {}
+                        name: name,
+                        percentage: null,
+                        submissions: {}
                     };
 
                     qsa( studentPage, '#assignments table tbody tr' ).map(
                         row => {
-                            var assignment = {
-                                name: qs( row, 'td a' ).innerText,
-                                href: qs( row, 'td a' ).getAttribute( 'href' )
-                            };
-
-                            assignments[ assignment.name ] = assignment;
 
                             var submission = {
                                 grade: qs( qsa( row, 'td' )[ 2 ], 'label' ).innerText.trim(),
                                 href: qs( qsa( row, 'td' )[ 1 ], 'a' ).getAttribute( 'href' ),
-                                submitted_at: moment(qsa( row, 'td' )[ 3 ].innerText.trim(), timeFormat)
+                                submitted_at: moment( qsa( row, 'td' )[ 3 ].innerText.trim(), timeFormat ),
+                                assignment: null
                             };
 
-                            if ( !ignoredGrades.includes(submission.grade)) {
-                                students[ name ].submissions[ assignment.name ] = {
-                                    assignment: assignment,
-                                    submission: submission
-                                };
+                            var assignment = {
+                                name: qs( row, 'td a' ).innerText,
+                                href: qs( row, 'td a' ).getAttribute( 'href' ),
+                                first_submission_at: submission.submitted_at
+                            };
+
+                            var exsiting_assignment = assignments.find( function( a ) {
+                                return a.name === assignment.name;
+                            } );
+
+                            if ( typeof( exsiting_assignment ) === 'undefined' ) {
+                                assignments.push( assignment );
+                            } else {
+                                assignment = exsiting_assignment;
+                            }
+
+                            if ( submission.submitted_at < assignment.first_submission_at ) {
+                                assignment.first_submission_at = submission.submitted_at;
+                            }
+
+                            if ( !ignoredGrades.includes( submission.grade ) ) {
+                                submission.assignment = assignment
+                                students[ name ].submissions[ assignment.name ] = submission;
                             }
 
                         } );
@@ -258,6 +272,11 @@
                     res();
                 } );
             } ) ) ).then( () => {
+
+                assignments.sort( function( a, b ) {
+                    return new Date( b.first_submission_at ) - new Date( a.first_submission_at );
+                } );
+
                 students = calculateGrades( students );
                 localStorage.setItem( 'cachedStudents', JSON.stringify( students ) );
                 localStorage.setItem( 'cachedAssignments', JSON.stringify( assignments ) );
@@ -265,6 +284,5 @@
             } );
         } );
     }
-
 
 } )( window.tiy || {}, window.jQuery, window.moment );
