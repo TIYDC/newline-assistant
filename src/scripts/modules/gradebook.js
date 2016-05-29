@@ -130,7 +130,7 @@
         );
 
         for ( let assignment of assignments ) {
-            let submission = student.submissions[ assignment.name ]
+            let submission = student.submissions[ assignment.name ];
             console.log( assignment, submission );
             if ( submission ) {
                 studentRow.append( $( '<td>' ).append(
@@ -263,7 +263,7 @@
                             }
 
                             if ( !ignoredGrades.includes( submission.grade ) ) {
-                                submission.assignment = assignment
+                                submission.assignment = assignment;
                                 students[ name ].submissions[ assignment.name ] = submission;
                             }
 
