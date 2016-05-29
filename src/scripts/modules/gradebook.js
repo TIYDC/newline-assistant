@@ -40,6 +40,11 @@
         'Not graded'
     ];
 
+
+    const ignoredGrades = [
+      'Retracted'
+    ];
+
     const timeFormat = "MMM DD, YYYY hh:mm A";
 
     function main( sessionData, $el ) {
@@ -241,7 +246,7 @@
                                 submitted_at: moment(qsa( row, 'td' )[ 3 ].innerText.trim(), timeFormat)
                             };
 
-                            if ( submission.grade !== 'Retracted' ) {
+                            if ( !ignoredGrades.includes(submission.grade)) {
                                 students[ name ].submissions[ assignment.name ] = {
                                     assignment: assignment,
                                     submission: submission
