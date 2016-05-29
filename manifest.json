@@ -17,6 +17,7 @@
       "matches": ["https://online.theironyard.com/*"],
       "js" : [
         "vendor/jquery-2.2.3.js",
+        "vendor/moment.2.13.0.min.js",
         "build/tiyo-assistant.js"
       ],
       "css" : ["vendor/font-awesome.min.css", "build/tiyo-assistant.css"]

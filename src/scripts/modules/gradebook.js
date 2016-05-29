@@ -1,4 +1,4 @@
-( function( tiy, $ ) {
+( function( tiy, $, moment ) {
     'use strict';
 
     tiy.loadModule( {
@@ -39,6 +39,8 @@
         'Exceeds expectations',
         'Not graded'
     ];
+
+    const timeFormat = "MMM DD, YYYY hh:mm A";
 
     function main( sessionData, $el ) {
         $( $el ).on( 'showing', function() {
@@ -236,7 +238,7 @@
                             var submission = {
                                 grade: qs( qsa( row, 'td' )[ 2 ], 'label' ).innerText.trim(),
                                 href: qs( qsa( row, 'td' )[ 1 ], 'a' ).getAttribute( 'href' ),
-                                submitted_at: qsa( row, 'td' )[ 3 ].innerText.trim()
+                                submitted_at: moment(qsa( row, 'td' )[ 3 ].innerText.trim(), timeFormat)
                             };
 
                             if ( submission.grade !== 'Retracted' ) {
@@ -260,4 +262,4 @@
     }
 
 
-} )( window.tiy || {}, window.jQuery );
+} )( window.tiy || {}, window.jQuery, window.moment );
