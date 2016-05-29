@@ -30,7 +30,7 @@
         'Complete and satisfactory': 'S',
         'Complete and unsatisfactory': 'U',
         'Incomplete': 'I',
-        'Not graded': '?',
+        'Not graded': 'G',
         'Retracted': 'R'
     };
 
