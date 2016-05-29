@@ -40,12 +40,13 @@
         'Not graded'
     ];
 
-
     const ignoredGrades = [
         'Retracted'
     ];
 
     const timeFormat = "MMM DD, YYYY hh:mm A";
+
+    // Behavior ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
     function main( sessionData, $el ) {
         $( $el ).on( 'showing', function() {
@@ -53,65 +54,47 @@
                 return;
             }
 
-            var gradebookData = JSON.parse( localStorage.getItem( 'cachedGradeBookData' ) );
+            const gradebookData = JSON.parse( localStorage.getItem( 'cachedGradeBookData' ) );
 
-            resetUI( sessionData, $el );
+            function getGradebook() {
+                console.info( "DDOSsing  TIYO" );
+                $( '#generate-score-card' ).text( "Processing" ).prop( "disabled", true );
+                scrape( sessionData.group.id, sessionData.path.id, function( students, assignments ) {
+                    resetUI( sessionData, $el );
+                    buildUI( $el, students, assignments );
+                } );
+            }
+
+            function resetUI() {
+                $el.html( '' );
+                $el.append( tableTemplate );
+
+                $( '#generate-score-card' ).click( getGradebook );
+            }
+
+            resetUI();
 
             if ( gradebookData ) {
                 try {
-                    buildGradebookUI( $el, gradebookData.students, gradebookData.assignments );
+                    buildUI(
+                        $el,
+                        gradebookData.students,
+                        gradebookData.assignments
+                    );
                 } catch ( e ) {
                     localStorage.removeItem( 'cachedGradeBookData' );
                 }
             } else {
-                console.info( "DDOSsing  TIYO" );
-                $( '#generate-score-card' ).text( "Processing" ).prop( "disabled", true );
-                generateGradebook( sessionData.group.id, sessionData.path.id, function( students, assignments ) {
-                    resetUI( sessionData, $el );
-                    buildGradebookUI( $el, students, assignments );
-                } );
+                getGradebook();
             }
 
             uiBuilt = true;
         } );
     }
 
-    function resetUI( sessionData, $el ) {
-        $el.html( '' );
-        $el.append( tableTemplate );
+    // UI ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-        $( '#generate-score-card' ).click( function() {
-            // This should be extracted out to a seperate function but need to manage scope.
-            console.info( "DDOSsing  TIYO" );
-            $( '#generate-score-card' ).text( "Processing" ).prop( "disabled", true );
-            generateGradebook( sessionData.group.id, sessionData.path.id, function( students, assignments ) {
-                resetUI( sessionData, $el );
-                buildGradebookUI( $el, students, assignments );
-            } );
-        } );
-    }
-
-    function calculateGrades( students ) {
-        if ( !students ) {
-            return;
-        }
-
-        // Question, What is the the best practice for building an uniq array of objects in JS.
-        Object.keys( students ).map( ( studentName ) => {
-            var student = students[ studentName ];
-            var submissions = Object.keys( student.submissions );
-
-            var okCount = submissions.filter( assignmentName => {
-                return okGrades.includes( student.submissions[ assignmentName ].grade );
-            } );
-
-            var grade = okCount.length / submissions.length * 100;
-            student.percentage = grade.toFixed( 0 );
-        } );
-        return students;
-    }
-
-    function buildGradebookAssignmentsHeader( assignments ) {
+    function buildAssignmentsHeader( assignments ) {
         var row = $( '<tr>' );
         row.append( $( '<th>' ).append( "Student" ) );
 
@@ -126,9 +109,8 @@
         return row;
     }
 
-    function buildGradebookStudentRow( student, assignments ) {
-
-        var studentRow = $( '<tr>' );
+    function buildStudentRow( student, assignments ) {
+        const studentRow = $( '<tr>' );
 
         studentRow.append(
             $( '<td>' ).append(
@@ -148,7 +130,9 @@
                     .prop( 'href', submission.href )
                     .prop( 'target', 'blank' )
                     .prop( 'title', assignment.name )
-                ).addClass( `grade ${shortGradeNames[submission.grade].toLowerCase()}` ) );
+                ).addClass(
+                    `grade ${shortGradeNames[submission.grade].toLowerCase()}`
+                ) );
             } else {
                 studentRow.append( $( '<td>' ) );
             }
@@ -157,10 +141,10 @@
         return studentRow;
     }
 
-    function buildGradebookUI( $el, students, assignments ) {
-        var $table = $el.find( 'table' );
+    function buildUI( $el, students, assignments ) {
+        const $table = $el.find( 'table' );
         $table.find( 'thead' )
-            .append( buildGradebookAssignmentsHeader( assignments ) );
+            .append( buildAssignmentsHeader( assignments ) );
 
         for ( var studentName in students ) {
             if ( students.hasOwnProperty( studentName ) ) {
@@ -170,12 +154,37 @@
                 }
 
                 var student = students[ studentName ];
-                $table.append( buildGradebookStudentRow( student, assignments ) );
+                $table.append( buildStudentRow( student, assignments ) );
             }
         }
     }
 
-    function generateGradebook( groupId, pathId, callback ) {
+    // Data Management +++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+    function calculateGrades( students, assignments ) {
+        if ( !students ) {
+            return;
+        }
+
+        // Question, What is the the best practice for building an uniq array
+        // of objects in JS.
+        Object.keys( students ).map( ( studentName ) => {
+            var student = students[ studentName ];
+
+            var submissions = Object.keys( student.submissions );
+
+            var okCount = submissions.filter( assignmentName => {
+                return okGrades.includes( student.submissions[ assignmentName ].grade );
+            } );
+
+            var grade = okCount.length / assignments.length * 100;
+            student.percentage = grade.toFixed( 0 );
+        } );
+        return students;
+    }
+
+
+    function scrape( groupId, pathId, callback ) {
 
         var group = id => `https://online.theironyard.com/admin/groups/${ id }`;
         var path = id => `https://online.theironyard.com/admin/paths/${ id }`;
@@ -287,13 +296,15 @@
                     return new Date( b.first_submission_at ) - new Date( a.first_submission_at );
                 } );
 
-                students = calculateGrades( students );
-                var gradebookData = {
+                students = calculateGrades( students, assignments );
+
+                const gradebookData = {
                     students: students,
                     assignments: assignments
                 };
+
                 localStorage.setItem( 'cachedGradeBookData', JSON.stringify( gradebookData ) );
-                callback( gradebookData );
+                callback( gradebookData.students, gradebookData.assignments );
             } );
         } );
     }
