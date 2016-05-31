@@ -253,19 +253,26 @@
                         submissions: {}
                     };
 
+                    let idFromUrl = ( href ) => href.substr(href.lastIndexOf('/') + 1) 
+
                     qsa( studentPage, '#assignments table tbody tr' ).map(
                         row => {
 
+                            let studentSubmissionPath = qs( qsa( row, 'td' )[ 1 ], 'a' ).getAttribute( 'href' );
+                            let assignmentPath = qs( row, 'td a' ).getAttribute( 'href' );
+
                             var submission = {
+                                id: idFromUrl( studentSubmissionPath ),
                                 grade: qs( qsa( row, 'td' )[ 2 ], 'label' ).innerText.trim(),
-                                href: qs( qsa( row, 'td' )[ 1 ], 'a' ).getAttribute( 'href' ),
+                                href: studentSubmissionPath,
                                 submitted_at: moment( qsa( row, 'td' )[ 3 ].innerText.trim(), timeFormat ),
                                 assignment: null
                             };
 
                             var assignment = {
+                                id: idFromUrl( assignmentPath ),
                                 name: qs( row, 'td a' ).innerText,
-                                href: qs( row, 'td a' ).getAttribute( 'href' ),
+                                href: assignmentPath,
                                 first_submission_at: submission.submitted_at
                             };
 
