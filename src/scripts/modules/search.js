@@ -7,7 +7,6 @@
     const FILLERS = /\b(an|and|are(n\'t)?|as|at|be|but|by|do(es)?(n\'t)?|for|from|if|in|into|is(n\'t)?|it\'?s?|no|none|not|of|on|or|such|that|the|theirs?|then|there(\'s)?|these|they|this|to|us|was|we|will|with|won\'t|you\'?r?e?)\b/g;
 
     let $ui = null;
-    let indexData = null;
     let pageData = {};
 
     tiy.loadModule({
@@ -17,7 +16,8 @@
     });
 
     function main(data, elem) {
-        try { indexData = JSON.parse(localStorage.getItem(INDEX_ITEM) || null); } catch(e) { /* let this go */ }
+        let indexData = {};
+        try { indexData = JSON.parse(localStorage.getItem(INDEX_ITEM) || '{}'); } catch(e) { /* let this go */ }
         console.info('loading search module with indexData', indexData);
 
         $ui = $(elem);
@@ -28,8 +28,13 @@
                 .then(function(html) {
                     $ui.append(html);
                     addIndexAge(indexData);
-                    $ui.find('.tiyo-assistant-search-refresh').click(buildIndex);
-                    $ui.find('form').submit(doSearch);
+                    $ui.find('.tiyo-assistant-search-refresh').click(function() {
+                        buildIndex(indexData);
+                    });
+                    $ui.find('form').submit(function(e) {
+                        e.preventDefault();
+                        doSearch($(this).find('[type=text]').val(), indexData);
+                    });
                 });
         } else {
             $ui.append(
@@ -42,48 +47,70 @@
         let now = Date.now();
         let ageDays = -1;
 
-        if (indexData && indexData[pageData.path.id] && indexData[pageData.path.id].createTime) {
-            ageDays = (now - indexData[pageData.path.id].createTime) / (1000 * 60 * 60 * 24);
+        if (indexData && indexData[pageData.path.id] && indexData[pageData.path.id].__createTime) {
+            ageDays = (now - indexData[pageData.path.id].__createTime) / (1000 * 60 * 60 * 24);
         }
 
         $ui.find('.tiyo-assistant-search-age time')
             .text( (ageDays > -1) ? (ageDays.toFixed(1) + ' days ago') : '(never)' );
     }
 
-    function doSearch(e) {
-        e.preventDefault();
-        if (!indexData) {
+    function doSearch(query, indexData) {
+        if (!query) { return; }
+
+        if (!indexData || !indexData[pageData.path.id]) {
             return $ui.find('.tiyo-assistant-notice').text('There is no index, please build it!');
         }
 
 
     }
 
-    function buildIndex() {
+    function buildIndex(indexData) {
         $ui.find('.tiyo-assistant-search-refresh').attr('disabled', 'disabled');
         $ui.find('.tiyo-assistant-notice').text('Recreating... this could take a while.');
 
-        let indexData = {
-            createTime: Date.now(),
-            index: {}
-        };
+        let pathIndex = Object.create(null);
+        pathIndex.__createTime = Date.now();
 
         let units = findContentIDs();
+        console.info('gathered unit data', units);
 
-        console.log('gathered all unit & content IDs', units);
+        let promises = [];
 
-        indexContent(pageData.path.id, units[0].id, units[0].lessons[0], 'lessons')
-            .then(function(index) {
-                Object.keys(index.hist).forEach(function(word) {
-                    indexData[word] = indexData[word] || { lessons: [], assignments: [] };
-                    indexData[word][index.type].push({
-                        u: index.unit,
-                        id: index.contentId,
-                        w: index.hist[word]
+        units.forEach(function(unit) {
+            unit.lessons.forEach(function(lesson) {
+                promises.push(indexContent(pageData.path.id, unit.id, lesson, 'lessons'));
+            });
+            unit.assignments.forEach(function(assignment) {
+                promises.push(indexContent(pageData.path.id, unit.id, assignment, 'assignments'));
+            });
+        });
+
+        Promise.all(promises)
+            .then(function(results) {
+                results.forEach(function(index) {
+                    Object.keys(index.hist).forEach(function(word) {
+                        pathIndex[word] = pathIndex[word] || { lessons: [], assignments: [] };
+                        pathIndex[word][index.type].push({
+                            u: index.unit,
+                            id: index.contentId,
+                            w: index.hist[word]
+                        });
                     });
                 });
 
-                console.log('index data', indexData);
+                console.info('final index for path', pageData.path.id, pathIndex);
+
+                indexData[pageData.path.id] = pathIndex;
+                localStorage.setItem(INDEX_ITEM, JSON.stringify(indexData));
+
+                $ui.find('.tiyo-assistant-search-refresh').attr('disabled', '');
+                $ui.find('.tiyo-assistant-notice').text('');
+            })
+            .catch(function(err) {
+                console.warn('Problem getting content index', err);
+                $ui.find('.tiyo-assistant-search-refresh').attr('disabled', '');
+                $ui.find('.tiyo-assistant-notice').text('There was a problem building the index, feel free to try again!');
             });
     }
 
@@ -121,11 +148,13 @@
 
                 content = content.join(' ')
                     .toLowerCase()
-                    .replace(/[^a-z0-9\'\-\s]/g, '')   // kill any non-word character (except ' and -)
-                    .replace(/\W?\-\W|\W\-\W?/g, ' ')  // kill any non-word hyphen
-                    .replace(/(\s|^)\w(\s|$)/g, ' ')   // kill any single characters
-                    .replace(FILLERS, ' ')
-                    .replace(/(\n\s*|\s{2,})/g, ' ');  // collapse all whitespace to a single character
+                    .replace(/[^a-z0-9\'\-\s]/g, ' ')      // kill any non-word character (except ' and -)
+                    .replace(/\W?\-\W|\W\-\W?/g, ' ')      // kill any non-word hyphen
+                    .replace(/\b\'|\'\b/g, ' ')            // remove single quotes not as apostrophes
+                    .replace(/\b(\w|\'\-)\b/g, ' ')        // kill any single characters
+                    .replace(/\b[0-9]+\b/g, ' ')           // remove pure numbers
+                    .replace(FILLERS, ' ')                 // remove filler words
+                    .replace(/(\n\s*|\s{2,})/g, ' ');      // collapse all whitespace to a single character
 
                 let hist = countWord(content, {});
                 return { path, unit, contentId, type, hist };
