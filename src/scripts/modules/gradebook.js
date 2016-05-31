@@ -152,11 +152,11 @@
             .append( buildAssignmentsHeader( assignments ) );
 
         const orderedStudents = Object.keys( students ).sort();
-        for ( var i = 0; i < orderedStudents.length; i++ ) {
+        for ( let studentName of orderedStudents ) {
             // Never display the instructor in the gradebook
-            if ( user.name === orderedStudents[i] ) { continue; }
+            if ( user.name === studentName ) { continue; }
 
-            var student = students[ orderedStudents[i] ];
+            var student = students[ studentName ];
             $table.append( buildStudentRow( student, assignments ) );
         }
     }
