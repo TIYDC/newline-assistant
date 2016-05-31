@@ -117,7 +117,7 @@
             $( '<td>' ).append(
                 $( '<a>' )
                 .text( student.name )
-                .prop( "href", "#" )
+                .prop( "href", `/admin/users/${student.id}` )
                 .prop( 'title', `Grade: ${student.percentage}%` )
             )
         );
@@ -127,8 +127,8 @@
         );
 
         for ( let assignment of assignments ) {
-            let submission = student.submissions[ assignment.name ];
-            console.log( assignment, submission );
+            let submission = student.submissions[ assignment.id ];
+
             if ( submission ) {
                 studentRow.append( $( '<td>' ).append(
                     $( '<a>' ).text( shortGradeNames[ submission.grade ] )
@@ -152,11 +152,11 @@
             .append( buildAssignmentsHeader( assignments ) );
 
         const orderedStudents = Object.keys( students ).sort();
-        for ( let studentName of orderedStudents ) {
+        for ( let studentId of orderedStudents ) {
             // Never display the instructor in the gradebook
-            if ( user.name === studentName ) { continue; }
+            if ( user.user_id.toString() === studentId ) { continue; }
 
-            var student = students[ studentName ];
+            var student = students[ studentId ];
             $table.append( buildStudentRow( student, assignments ) );
         }
     }
@@ -175,8 +175,8 @@
 
             var submissions = Object.keys( student.submissions );
 
-            var okCount = submissions.filter( assignmentName => {
-                return okGrades.includes( student.submissions[ assignmentName ].grade );
+            var okCount = submissions.filter( assignmentId => {
+                return okGrades.includes( student.submissions[ assignmentId ].grade );
             } );
 
             var grade = okCount.length / assignments.length * 100;
@@ -240,20 +240,24 @@
             var students = {};
             var assignments = [];
 
+            let idFromUrl = ( href ) => { return Number( href.substr( href.lastIndexOf('/') + 1 ) ) } 
+
             Promise.all( s.map( url => new Promise( ( res ) => {
                 $.get( url ).then( html => {
+
                     var studentPage = document.createElement( 'html' );
                     studentPage.innerHTML = html;
 
                     var name = qs( studentPage, 'h1 strong' ).innerText;
+                    let studentId = idFromUrl( url );
 
-                    students[ name ] = {
+                    students[ studentId ] = {
+                        id: studentId,
                         name: name,
                         percentage: null,
                         submissions: {}
                     };
 
-                    let idFromUrl = ( href ) => href.substr(href.lastIndexOf('/') + 1) 
 
                     qsa( studentPage, '#assignments table tbody tr' ).map(
                         row => {
@@ -277,7 +281,7 @@
                             };
 
                             var exsiting_assignment = assignments.find( function( a ) {
-                                return a.name === assignment.name;
+                                return a.id === assignment.id;
                             } );
 
                             if ( typeof( exsiting_assignment ) === 'undefined' ) {
@@ -292,7 +296,7 @@
 
                             if ( !ignoredGrades.includes( submission.grade ) ) {
                                 submission.assignment = assignment;
-                                students[ name ].submissions[ assignment.name ] = submission;
+                                students[ studentId ].submissions[ assignment.id ] = submission;
                             }
 
                         } );
