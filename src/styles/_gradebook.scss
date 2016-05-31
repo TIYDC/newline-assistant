@@ -1,28 +1,41 @@
-.tiyo-assistant .table th, .tiyo-assistant .table td  {
-  font-size: 0.5em;
-  padding: 0.4rem !important;
-}
-
-.tiyo-assistant table td.u {
-  background-color: #e74c3c;
-}
-
-.tiyo-assistant table td.g {
-  background-color: blue;
-}
-
-.tiyo-assistant table td.i {
-  background-color: #e74c3c;
-}
-
-.tiyo-assistant table td.e {
-  background-color: #6fbbb7;
-}
-
-.tiyo-assistant table td.s {
-  background-color: #6fbbb7;
-}
-
-.tiyo-assistant table td.grade a {
-  color:white;
+.tiyo-assistant {
+    table.table {
+        td,
+        th {
+            font-size: 0.5em;
+            padding: 0.4rem !important;
+            position: relative;
+            &.u {
+                background-color: #e74c3c;
+            }
+            &.g {
+                background-color: blue;
+            }
+            &.i {
+                background-color: #e74c3c;
+            }
+            &.e {
+                background-color: #6fbbb7;
+            }
+            &.s {
+                background-color: #6fbbb7;
+            }
+            &.grade a {
+                color: white;
+            }
+            &[data-tooltip]:hover::after, &[data-tooltip]:focus::after {
+                content: attr(data-tooltip);
+                padding: 4px 8px;
+                background-color: black;
+                box-shadow: 1px 2px 2px #333;
+                color: white;
+                position: absolute;
+                top: -90%;
+                right: 0;
+                white-space: nowrap;
+                z-index: 3;
+                border-radius: 2px;
+            }
+        }
+    }
 }

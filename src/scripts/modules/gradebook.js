@@ -9,6 +9,7 @@
 
     // HACK so we can not show the logged in instructor if they belong to the
     // path
+    // Possible solution, tap into primary window
     let user = eval( $( "#IntercomSettingsScriptTag" ).text() );
     let uiBuilt = false;
 
@@ -25,7 +26,7 @@
       </section>
       `;
 
-    const shortGradeNames = {
+    const SHORTGRADENAMES = {
         'Exceeds expectations': 'E',
         'Complete and satisfactory': 'S',
         'Complete and unsatisfactory': 'U',
@@ -34,17 +35,17 @@
         'Retracted': 'R'
     };
 
-    const okGrades = [
+    const OKGRADES = [
         'Complete and satisfactory',
         'Exceeds expectations',
         'Not graded'
     ];
 
-    const ignoredGrades = [
+    const IGNOREDGRADES = [
         'Retracted'
     ];
 
-    const timeFormat = "MMM DD, YYYY hh:mm A";
+    const TIMEFORMAT = "MMM DD, YYYY hh:mm A";
 
     // Behavior ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
@@ -54,11 +55,11 @@
                 return;
             }
 
-            const gradebookData = JSON.parse( localStorage.getItem( 'cachedGradeBookData' ) );
+            const GRADEBOOKDATA = JSON.parse( localStorage.getItem( 'cachedGradeBookData' ) );
 
             function getGradebook() {
                 console.info( "DDOSsing  TIYO" );
-                $( '#generate-score-card' ).text( "Processing" ).prop( "disabled", true );
+                $( '#generate-score-card' ).text( "Processing" ).attr( "disabled", true );
                 scrape( sessionData.group.id, sessionData.path.id, function( students, assignments ) {
                     resetUI( sessionData, $el );
                     buildUI( $el, students, assignments );
@@ -74,12 +75,12 @@
 
             resetUI();
 
-            if ( gradebookData ) {
+            if ( GRADEBOOKDATA ) {
                 try {
                     buildUI(
                         $el,
-                        gradebookData.students,
-                        gradebookData.assignments
+                        GRADEBOOKDATA.students,
+                        GRADEBOOKDATA.assignments
                     );
                 } catch ( e ) {
                     localStorage.removeItem( 'cachedGradeBookData' );
@@ -102,9 +103,12 @@
         for ( let assignment of assignments ) {
             row.append( $( '<th>' ).append( $( '<a>' )
                 .text( assignment.name.slice( 0, 1 ) )
-                .prop( 'href', assignment.href )
-                .prop( 'title', assignment.name )
-            ) );
+                .attr( 'href', assignment.href )
+                .attr( 'title', assignment.name )
+
+
+            ).attr( 'data-tooltip', assignment.name )
+           );
         }
 
         return row;
@@ -117,27 +121,31 @@
             $( '<td>' ).append(
                 $( '<a>' )
                 .text( student.name )
-                .prop( "href", `/admin/users/${student.id}` )
-                .prop( 'title', `Grade: ${student.percentage}%` )
+                .attr( "href", `/admin/users/${student.id}` )
+                .attr( 'title', `Grade: ${student.percentage}%` )
             )
         );
 
         studentRow.append(
-            $( '<td>' ).text(`${student.percentage}%` )
+            $( '<td>' ).text( `${student.percentage}%` )
         );
 
         for ( let assignment of assignments ) {
             let submission = student.submissions[ assignment.id ];
 
             if ( submission ) {
-                studentRow.append( $( '<td>' ).append(
-                    $( '<a>' ).text( shortGradeNames[ submission.grade ] )
-                    .prop( 'href', submission.href )
-                    .prop( 'target', 'blank' )
-                    .prop( 'title', assignment.name )
-                ).addClass(
-                    `grade ${shortGradeNames[submission.grade].toLowerCase()}`
-                ) );
+                studentRow.append(
+                    $( '<td>' ).append(
+                        $( '<a>' ).text( SHORTGRADENAMES[ submission.grade ] )
+                        .attr( 'href', submission.href )
+                        .attr( 'target', 'blank' )
+                        .attr( 'title', assignment.name )
+                    )
+                    .attr( 'data-tooltip', assignment.name )
+                    .addClass(
+                        `grade ${SHORTGRADENAMES[submission.grade].toLowerCase()}`
+                    )
+                );
             } else {
                 studentRow.append( $( '<td>' ) );
             }
@@ -154,7 +162,9 @@
         const orderedStudents = Object.keys( students ).sort();
         for ( let studentId of orderedStudents ) {
             // Never display the instructor in the gradebook
-            if ( user.user_id.toString() === studentId ) { continue; }
+            if ( user.user_id.toString() === studentId ) {
+                continue;
+            }
 
             var student = students[ studentId ];
             $table.append( buildStudentRow( student, assignments ) );
@@ -176,7 +186,7 @@
             var submissions = Object.keys( student.submissions );
 
             var okCount = submissions.filter( assignmentId => {
-                return okGrades.includes( student.submissions[ assignmentId ].grade );
+                return OKGRADES.includes( student.submissions[ assignmentId ].grade );
             } );
 
             var grade = okCount.length / assignments.length * 100;
@@ -240,7 +250,9 @@
             var students = {};
             var assignments = [];
 
-            let idFromUrl = ( href ) => { return Number( href.substr( href.lastIndexOf('/') + 1 ) ) } 
+            let idFromUrl = ( href ) => {
+                return Number( href.substr( href.lastIndexOf( '/' ) + 1 ) )
+            }
 
             Promise.all( s.map( url => new Promise( ( res ) => {
                 $.get( url ).then( html => {
@@ -269,7 +281,7 @@
                                 id: idFromUrl( studentSubmissionPath ),
                                 grade: qs( qsa( row, 'td' )[ 2 ], 'label' ).innerText.trim(),
                                 href: studentSubmissionPath,
-                                submitted_at: moment( qsa( row, 'td' )[ 3 ].innerText.trim(), timeFormat ),
+                                submitted_at: moment( qsa( row, 'td' )[ 3 ].innerText.trim(), TIMEFORMAT ),
                                 assignment: null
                             };
 
@@ -294,7 +306,7 @@
                                 assignment.first_submission_at = submission.submitted_at;
                             }
 
-                            if ( !ignoredGrades.includes( submission.grade ) ) {
+                            if ( !IGNOREDGRADES.includes( submission.grade ) ) {
                                 submission.assignment = assignment;
                                 students[ studentId ].submissions[ assignment.id ] = submission;
                             }
@@ -311,13 +323,13 @@
 
                 students = calculateGrades( students, assignments );
 
-                const gradebookData = {
+                const GRADEBOOKDATA = {
                     students: students,
                     assignments: assignments
                 };
 
-                localStorage.setItem( 'cachedGradeBookData', JSON.stringify( gradebookData ) );
-                callback( gradebookData.students, gradebookData.assignments );
+                localStorage.setItem( 'cachedGradeBookData', JSON.stringify( GRADEBOOKDATA ) );
+                callback( GRADEBOOKDATA.students, GRADEBOOKDATA.assignments );
             } );
         } );
     }
