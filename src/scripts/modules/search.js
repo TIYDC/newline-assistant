@@ -3,6 +3,8 @@
 
     const INDEX_ITEM = 'tiyo-search-index';
     const TEMPLATE = 'build/templates/search.html';
+    const SCRAPE_BASE = 'https://online.theironyard.com';
+    const FILLERS = /\b(an|and|are(n\'t)?|as|at|be|but|by|do(es)?(n\'t)?|for|from|if|in|into|is(n\'t)?|it\'?s?|no|none|not|of|on|or|such|that|the|theirs?|then|there(\'s)?|these|they|this|to|us|was|we|will|with|won\'t|you\'?r?e?)\b/g;
 
     let $ui = null;
     let indexData = null;
@@ -65,6 +67,27 @@
             createTime: Date.now(),
             index: {}
         };
+
+        let units = findContentIDs();
+
+        console.log('gathered all unit & content IDs', units);
+
+        indexContent(pageData.path.id, units[0].id, units[0].lessons[0], 'lessons')
+            .then(function(index) {
+                Object.keys(index.hist).forEach(function(word) {
+                    indexData[word] = indexData[word] || { lessons: [], assignments: [] };
+                    indexData[word][index.type].push({
+                        u: index.unit,
+                        id: index.contentId,
+                        w: index.hist[word]
+                    });
+                });
+
+                console.log('index data', indexData);
+            });
+    }
+
+    function findContentIDs() {
         let units = [];
 
         $('.unit').each(function() {
@@ -83,22 +106,39 @@
             units.push(unit);
         });
 
-        console.log('gathered all unit & content id\'s', units);
+        return units;
+    }
 
-        //     {
-        //         "157": {
-        //             "createTime": 1234567890,
-        //             "index": {
-        //                 "indexed-word": {
-        //                     "lessons": [ "615-1804" ],
-        //                     "assignments": [ "615-1025" ]
-        //                 ]
-        //             }
-        //         }
-        //     }
+    function indexContent(path, unit, contentId, type) {
+        return $.get(`${SCRAPE_BASE}/paths/${path}/units/${unit}/${type}/${contentId}`)
+            .then(function scrapeAndIndex(html) {
+                let $html = $(html);
+                let content = [];
 
+                content.push($html.find('h1').text());
+                content.push($html.find('article').prev('p').prev('p').text());
+                content.push($html.find('article').text());
 
-        // paths/157/units/965/lessons/2893
+                content = content.join(' ')
+                    .toLowerCase()
+                    .replace(/[^a-z0-9\'\-\s]/g, '')   // kill any non-word character (except ' and -)
+                    .replace(/\W?\-\W|\W\-\W?/g, ' ')  // kill any non-word hyphen
+                    .replace(/(\s|^)\w(\s|$)/g, ' ')   // kill any single characters
+                    .replace(FILLERS, ' ')
+                    .replace(/(\n\s*|\s{2,})/g, ' ');  // collapse all whitespace to a single character
+
+                let hist = countWord(content, {});
+                return { path, unit, contentId, type, hist };
+            });
+    }
+
+    function countWord(content, hist) {
+        let next = content.match(/^\s*([\w\-\']+)\s+/);
+        if (next) {
+            hist[next[1]] = (hist[next[1]] && ++hist[next[1]]) || 1;
+            return countWord(content.replace(/^\s*([\w\-\']+)\s+/, ''), hist);
+        }
+        return hist;
     }
 
 
