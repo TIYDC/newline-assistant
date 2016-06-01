@@ -38,7 +38,7 @@
             })
             .then(function callModuleRenders(html) {
                 mainUI = $(html);
-                $('.breadcrumb').after(mainUI);
+                $('.main .content').prepend(mainUI);
                 uiLoaded = true;
 
                 setupContentClose();
