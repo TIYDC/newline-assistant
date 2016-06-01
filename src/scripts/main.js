@@ -9,11 +9,13 @@
     let navUI = null;
     let mainUI = null;
     let modulesLoaded = [];
+    let moduleDisplayed = null;
     let dataLoaded = false;
     let uiLoaded = false;
 
     const MAIN_TEMPLATE = 'build/templates/main.html';
     const NAV_TEMPLATE = 'build/templates/nav.html';
+    const PANEL_ANIMATION_TIME = 200
 
     function main() {
         console.info('Initializing TIYO assistant');
@@ -32,7 +34,7 @@
                 $('.main .header:first').append(navUI);
 
                 modulesLoaded.forEach(addNavIcon);
-                navUI.on('click', 'li', showModuleUI);
+                navUI.on('click', 'li', toggleModuleUI);
 
                 return $.get(chrome.extension.getURL(MAIN_TEMPLATE));
             })
@@ -118,23 +120,33 @@
         );
     }
 
-    function showModuleUI(e) {
+    function toggleModuleUI(e) {
         e.preventDefault();
         var name = $(this).data('module');
         var mod = modulesLoaded.filter(function(m) { return m.name === name;});
         if (!mod.length) { return; }
 
-        console.log('showing ', mod[0]);
-        $('.tiyo-assistant-module').hide();
-        $(`[data-module="${mod[0].name}"]`).show().trigger('showing');
-        mainUI.slideDown(1000);
+        if (moduleDisplayed === mod[0].name) {
+          console.log('hiding ', mod[0]);
+          closeContent(e);
+        } else {
+          console.log('showing ', mod[0]);
+          moduleDisplayed = mod[0].name;
+          $('.tiyo-assistant-module').hide();
+          $(`[data-module="${mod[0].name}"]`).show().trigger('showing');
+          mainUI.slideDown(PANEL_ANIMATION_TIME);
+        }
+    }
+
+    function closeContent(e) {
+        e.preventDefault();
+        $(`[data-module="${moduleDisplayed}"]`).show().trigger('hiding');
+        moduleDisplayed = null;
+        mainUI.slideUp(PANEL_ANIMATION_TIME);
     }
 
     function setupContentClose() {
-        $('.tiyo-assistant-close').click(function closeContent(e) {
-            e.preventDefault();
-            mainUI.slideUp(1000);
-        });
+        $('.tiyo-assistant-close').click(closeContent);
     }
 
     function loadModule(api) {
