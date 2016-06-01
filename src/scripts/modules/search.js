@@ -56,13 +56,62 @@
     }
 
     function doSearch(query, indexData) {
+        $('.tiyo-assistant-search-results li').remove();
+
         if (!query) { return; }
 
         if (!indexData || !indexData[pageData.path.id]) {
-            return $ui.find('.tiyo-assistant-notice').text('There is no index, please build it!');
+            return $ui.find('.tiyo-assistant-notice').text('There is no indexfor this path, please build it!');
         }
 
+        console.info('searching path %d for %s', pageData.path.id, query);
 
+        let index = indexData[pageData.path.id];
+        let tokens = query.replace(FILLERS, ' ').split(/\s+/);
+        let results = Object.create(null);
+
+        tokens
+            .filter(function(token) {
+                // remove any empties
+                return token.trim().length;
+            })
+            .map(function(token) {
+                // map to the matched content
+                return index[token] || [];
+            })
+            .forEach(function(matches) {
+                // build total weight for single content piece
+                matches.forEach(function(match) {
+                    if (!results[match.id]) {
+                        results[match.id] = {
+                            id: match.id,
+                            type: (match.t === 'l') ? 'Lesson' : 'Assignment',
+                            unit: match.u,
+                            weight: 0
+                        };
+                        results[match.id].title = $(`[data-id="gid://online/${results[match.id].type}/${results[match.id].id}"] a:first-child`).text();
+                    }
+                    results[match.id].weight += match.w;
+                });
+            });
+
+        let sortedResults = [];
+        Object.keys(results).forEach(function(id) {
+            sortedResults.push(results[id]);
+        });
+        sortedResults.sort(function(a, b) {
+            return b.weight - a.weight;
+        });
+
+        console.log('search results built', sortedResults);
+
+        let resultItems = [];
+        resultItems = sortedResults.map(function(result) {
+            return `<li class='path-tree-level ${result.type.toLowerCase()}'>
+                <a href='/admin/${result.type.toLowerCase()}s/${result.id}' class='text-body'>${result.title}</a>
+            </li>`;
+        });
+        $('.tiyo-assistant-search-results ul').append(resultItems.join(''));
     }
 
     function buildIndex(indexData) {
@@ -90,11 +139,12 @@
             .then(function(results) {
                 results.forEach(function(index) {
                     Object.keys(index.hist).forEach(function(word) {
-                        pathIndex[word] = pathIndex[word] || { lessons: [], assignments: [] };
-                        pathIndex[word][index.type].push({
+                        pathIndex[word] = pathIndex[word] || [];
+                        pathIndex[word].push({
                             u: index.unit,
                             id: index.contentId,
-                            w: index.hist[word]
+                            w: index.hist[word],
+                            t: (index.type === 'lessons') ? 'l' : 'a'
                         });
                     });
                 });
@@ -103,13 +153,14 @@
 
                 indexData[pageData.path.id] = pathIndex;
                 localStorage.setItem(INDEX_ITEM, JSON.stringify(indexData));
+                addIndexAge(indexData);
 
                 $ui.find('.tiyo-assistant-search-refresh').attr('disabled', '');
                 $ui.find('.tiyo-assistant-notice').text('');
             })
             .catch(function(err) {
                 console.warn('Problem getting content index', err);
-                $ui.find('.tiyo-assistant-search-refresh').attr('disabled', '');
+                $ui.find('.tiyo-assistant-search-refresh').attr('disabled', false);
                 $ui.find('.tiyo-assistant-notice').text('There was a problem building the index, feel free to try again!');
             });
     }
