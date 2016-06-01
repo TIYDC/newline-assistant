@@ -26,7 +26,7 @@
       </section>
       `;
 
-    const SHORTGRADENAMES = {
+    const SHORT_GRADE_NAMES = {
         'Exceeds expectations': 'E',
         'Complete and satisfactory': 'S',
         'Complete and unsatisfactory': 'U',
@@ -35,17 +35,17 @@
         'Retracted': 'R'
     };
 
-    const OKGRADES = [
+    const OK_GRADES = [
         'Complete and satisfactory',
         'Exceeds expectations',
         'Not graded'
     ];
 
-    const IGNOREDGRADES = [
+    const IGNORED_GRADES = [
         'Retracted'
     ];
 
-    const TIMEFORMAT = "MMM DD, YYYY hh:mm A";
+    const TIME_FORMAT = "MMM DD, YYYY hh:mm A";
 
     // Behavior ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
@@ -136,14 +136,14 @@
             if ( submission ) {
                 studentRow.append(
                     $( '<td>' ).append(
-                        $( '<a>' ).text( SHORTGRADENAMES[ submission.grade ] )
+                        $( '<a>' ).text( SHORT_GRADE_NAMES[ submission.grade ] )
                         .attr( 'href', submission.href )
                         .attr( 'target', 'blank' )
                         .attr( 'title', assignment.name )
                     )
                     .attr( 'data-tooltip', assignment.name )
                     .addClass(
-                        `grade ${SHORTGRADENAMES[submission.grade].toLowerCase()}`
+                        `grade ${SHORT_GRADE_NAMES[submission.grade].toLowerCase()}`
                     )
                 );
             } else {
@@ -186,7 +186,7 @@
             var submissions = Object.keys( student.submissions );
 
             var okCount = submissions.filter( assignmentId => {
-                return OKGRADES.includes( student.submissions[ assignmentId ].grade );
+                return OK_GRADES.includes( student.submissions[ assignmentId ].grade );
             } );
 
             var grade = okCount.length / assignments.length * 100;
@@ -281,7 +281,7 @@
                                 id: idFromUrl( studentSubmissionPath ),
                                 grade: qs( qsa( row, 'td' )[ 2 ], 'label' ).innerText.trim(),
                                 href: studentSubmissionPath,
-                                submitted_at: moment( qsa( row, 'td' )[ 3 ].innerText.trim(), TIMEFORMAT ),
+                                submitted_at: moment( qsa( row, 'td' )[ 3 ].innerText.trim(), TIME_FORMAT ),
                                 assignment: null
                             };
 
@@ -306,7 +306,7 @@
                                 assignment.first_submission_at = submission.submitted_at;
                             }
 
-                            if ( !IGNOREDGRADES.includes( submission.grade ) ) {
+                            if ( !IGNORED_GRADES.includes( submission.grade ) ) {
                                 submission.assignment = assignment;
                                 students[ studentId ].submissions[ assignment.id ] = submission;
                             }
