@@ -40,7 +40,7 @@
             })
             .then(function callModuleRenders(html) {
                 mainUI = $(html);
-                $('.breadcrumb').after(mainUI);
+                $('.main .content').prepend(mainUI);
                 uiLoaded = true;
 
                 setupContentClose();
@@ -71,13 +71,26 @@
         );
     }
 
+    function fetchOrBuildData(){
+      let cachedData = localStorage.getItem( 'tiyoAssistant' );
+      if (cachedData === null) {
+        return {
+            path: null,
+            group: null,
+            students: []
+        }
+      } else {
+        return JSON.parse(cachedData);
+      }
+    }
+
+    function setStoredData(data) {
+      localStorage.setItem( 'tiyoAssistant', JSON.stringify( data ) );
+    }
+
     function collectData() {
         let path = window.location.pathname.split(/\//),
-            data = {
-                path: null,
-                group: null,
-                students: []
-            },
+            data = fetchOrBuildData(),
             group = $('.card-block dt:contains("Group")').next().find('a');
 
         if (path.length === 4 && path[2] === 'paths') {
@@ -103,6 +116,7 @@
                         name: studentElem.text()
                     });
                 });
+                setStoredData(data);
                 return data;
             });
         } else {
