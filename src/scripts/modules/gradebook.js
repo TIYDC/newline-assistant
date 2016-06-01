@@ -10,11 +10,12 @@
     // HACK so we can not show the logged in instructor if they belong to the
     // path
     // Possible solution, tap into primary window
+    // $( "#IntercomSettingsScriptTag" ).text().replace("window.intercomSettings =", "").replace(";", "")
     let user = eval( $( "#IntercomSettingsScriptTag" ).text() );
     let uiBuilt = false;
 
-    let tableTemplate = `
-      <table class=\"table table-condensed\">
+    const TABLE_TEMPLATE = `
+      <table class="table table-condensed">
         <thead></thead>
         <tbody></tbody>
       </table>
@@ -45,70 +46,112 @@
         'Retracted'
     ];
 
-    const TIME_FORMAT = "MMM DD, YYYY hh:mm A";
+    const PARSING_TIME_FORMAT = "MMM DD, YYYY hh:mm A";
 
     // Behavior ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
     function main( sessionData, $el ) {
         $( $el ).on( 'showing', function() {
-            if ( uiBuilt ) {
-                return;
-            }
-
-            const GRADEBOOK_DATA = JSON.parse( localStorage.getItem( 'cachedGradeBookData' ) );
-
-            function getGradebook() {
-                console.info( "DDOSsing  TIYO" );
-                $( '#generate-score-card' ).text( "Processing" ).attr( "disabled", true );
-                scrape( sessionData.group.id, sessionData.path.id, function( students, assignments ) {
-                    resetUI( sessionData, $el );
-                    buildUI( $el, students, assignments );
-                } );
-            }
-
-            function resetUI() {
-                $el.html( '' );
-                $el.append( tableTemplate );
-
-                $( '#generate-score-card' ).click( getGradebook );
-            }
-
-            resetUI();
-
-            if ( GRADEBOOK_DATA ) {
-                try {
-                    buildUI(
-                        $el,
-                        GRADEBOOK_DATA.students,
-                        GRADEBOOK_DATA.assignments
-                    );
-                } catch ( e ) {
-                    localStorage.removeItem( 'cachedGradeBookData' );
-                }
-            } else {
-                getGradebook();
-            }
-
-            uiBuilt = true;
+          show(sessionData, $el);
         } );
+    }
+
+    function show(sessionData, $el){
+      let gradebook_data;
+
+      if ( uiBuilt ) {
+          return;
+      }
+
+      try {
+        gradebook_data = JSON.parse(
+          localStorage.getItem( 'cachedGradeBookData' )
+        );
+
+      } catch (e) {}
+
+      resetUI();
+
+      if ( gradebook_data ) {
+          try {
+              buildUI(
+                  $el,
+                  gradebook_data.students,
+                  gradebook_data.assignments
+              );
+          } catch ( e ) {
+              localStorage.removeItem( 'cachedGradeBookData' );
+          }
+      } else {
+          getGradebook(sessionData, $el);
+      }
+
+      uiBuilt = true;
+    }
+
+
+    function getGradebook( sessionData, $el ) {
+        console.info( "DDOSsing  TIYO" );
+
+        if (sessionData.group === null && sessionData.path === null) {
+          // Provide feedback to the user that we can't handle this.
+          return;
+        }
+
+        $( '#generate-score-card' ).text( "Processing" ).attr( "disabled", true );
+
+        try {
+          scrape( sessionData.group.id, sessionData.path.id, function( students, assignments ) {
+              resetUI( sessionData, $el );
+              buildUI( $el, students, assignments );
+          } );
+        } catch (e) {
+          console.warn("it blewup", e);
+            // Wrap in try catch to show UI to user that something went wrong ( user permissions? )
+        }
     }
 
     // UI ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
+    function resetUI( sessionData, $el ) {
+        $el.html( '' );
+        $el.append( TABLE_TEMPLATE );
+
+        $( '#generate-score-card' ).click( function () {
+          getGradebook( sessionData, $el );
+        });
+    }
+
+    function buildUI( $el, students, assignments ) {
+        const $table = $el.find( 'table' );
+        $table.find( 'thead' )
+            .append( buildAssignmentsHeader( assignments ) );
+
+        const orderedStudents = Object.keys( students ).sort();
+        for ( let studentId of orderedStudents ) {
+            // Never display the instructor in the gradebook
+            if ( user.user_id.toString() === studentId ) {
+                continue;
+            }
+
+            let student = students[ studentId ];
+            $table.append( buildStudentRow( student, assignments ) );
+        }
+    }
+
     function buildAssignmentsHeader( assignments ) {
-        var row = $( '<tr>' );
+        const row = $( '<tr>' );
         row.append( $( '<th>' ).append( "Student" ) );
         row.append( $( '<th>' ).append( "Grade" ) );
 
         for ( let assignment of assignments ) {
-            row.append( $( '<th>' ).append( $( '<a>' )
-                .text( assignment.name.slice( 0, 1 ) )
-                .attr( 'href', assignment.href )
-                .attr( 'title', assignment.name )
-
-
-            ).attr( 'data-tooltip', assignment.name )
-           );
+            row.append(`
+              <th data-tooltip='${assignment.name}'>
+                <a href='${assignment.href}' title='${assignment.name}'>
+                  ${assignment.name.slice( 0, 1 )}
+                </a>
+              </th>
+            `);
         }
 
         return row;
@@ -152,23 +195,6 @@
         }
 
         return studentRow;
-    }
-
-    function buildUI( $el, students, assignments ) {
-        const $table = $el.find( 'table' );
-        $table.find( 'thead' )
-            .append( buildAssignmentsHeader( assignments ) );
-
-        const orderedStudents = Object.keys( students ).sort();
-        for ( let studentId of orderedStudents ) {
-            // Never display the instructor in the gradebook
-            if ( user.user_id.toString() === studentId ) {
-                continue;
-            }
-
-            var student = students[ studentId ];
-            $table.append( buildStudentRow( student, assignments ) );
-        }
     }
 
     // Data Management +++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -247,8 +273,8 @@
         var assignmentTitles = getPath( pathId );
 
         Promise.all( [ studentUrls, assignmentTitles ] ).then( ( [ s ] ) => {
-            var students = {};
-            var assignments = [];
+            let students = {};
+            let assignments = [];
 
             let idFromUrl = ( href ) => {
                 return Number( href.substr( href.lastIndexOf( '/' ) + 1 ) );
@@ -277,33 +303,31 @@
                             let studentSubmissionPath = qs( qsa( row, 'td' )[ 1 ], 'a' ).getAttribute( 'href' );
                             let assignmentPath = qs( row, 'td a' ).getAttribute( 'href' );
 
-                            var submission = {
+                            let submission = {
                                 id: idFromUrl( studentSubmissionPath ),
                                 grade: qs( qsa( row, 'td' )[ 2 ], 'label' ).innerText.trim(),
                                 href: studentSubmissionPath,
-                                submitted_at: moment( qsa( row, 'td' )[ 3 ].innerText.trim(), TIME_FORMAT ),
+                                submitted_at: moment( qsa( row, 'td' )[ 3 ].innerText.trim(), PARSING_TIME_FORMAT ),
                                 assignment: null
                             };
 
-                            var assignment = {
-                                id: idFromUrl( assignmentPath ),
-                                name: qs( row, 'td a' ).innerText,
-                                href: assignmentPath,
-                                first_submission_at: submission.submitted_at
-                            };
-
-                            var exsiting_assignment = assignments.find( function( a ) {
-                                return a.id === assignment.id;
+                            let assignmentId = idFromUrl( assignmentPath );
+                            let assignment = assignments.find( function( a ) {
+                                return a.id === assignmentId;
                             } );
 
-                            if ( typeof( exsiting_assignment ) === 'undefined' ) {
-                                assignments.push( assignment );
+                            if (assignment) {
+                              if ( submission.submitted_at < assignment.first_submission_at ) {
+                                  assignment.first_submission_at = submission.submitted_at;
+                              }
                             } else {
-                                assignment = exsiting_assignment;
-                            }
-
-                            if ( submission.submitted_at < assignment.first_submission_at ) {
-                                assignment.first_submission_at = submission.submitted_at;
+                              assignment = {
+                                  id: assignmentId,
+                                  name: qs( row, 'td a' ).innerText,
+                                  href: assignmentPath,
+                                  first_submission_at: submission.submitted_at
+                              };
+                              assignments.push( assignment );
                             }
 
                             if ( !IGNORED_GRADES.includes( submission.grade ) ) {
@@ -323,13 +347,13 @@
 
                 students = calculateGrades( students, assignments );
 
-                const GRADEBOOK_DATA = {
+                const gradebook_data = {
                     students: students,
                     assignments: assignments
                 };
 
-                localStorage.setItem( 'cachedGradeBookData', JSON.stringify( GRADEBOOK_DATA ) );
-                callback( GRADEBOOK_DATA.students, GRADEBOOK_DATA.assignments );
+                localStorage.setItem( 'cachedGradeBookData', JSON.stringify( gradebook_data ) );
+                callback( gradebook_data.students, gradebook_data.assignments );
             } );
         } );
     }
