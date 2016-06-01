@@ -55,7 +55,7 @@
                 return;
             }
 
-            const GRADEBOOKDATA = JSON.parse( localStorage.getItem( 'cachedGradeBookData' ) );
+            const GRADEBOOK_DATA = JSON.parse( localStorage.getItem( 'cachedGradeBookData' ) );
 
             function getGradebook() {
                 console.info( "DDOSsing  TIYO" );
@@ -75,12 +75,12 @@
 
             resetUI();
 
-            if ( GRADEBOOKDATA ) {
+            if ( GRADEBOOK_DATA ) {
                 try {
                     buildUI(
                         $el,
-                        GRADEBOOKDATA.students,
-                        GRADEBOOKDATA.assignments
+                        GRADEBOOK_DATA.students,
+                        GRADEBOOK_DATA.assignments
                     );
                 } catch ( e ) {
                     localStorage.removeItem( 'cachedGradeBookData' );
@@ -251,8 +251,8 @@
             var assignments = [];
 
             let idFromUrl = ( href ) => {
-                return Number( href.substr( href.lastIndexOf( '/' ) + 1 ) )
-            }
+                return Number( href.substr( href.lastIndexOf( '/' ) + 1 ) );
+            };
 
             Promise.all( s.map( url => new Promise( ( res ) => {
                 $.get( url ).then( html => {
@@ -323,13 +323,13 @@
 
                 students = calculateGrades( students, assignments );
 
-                const GRADEBOOKDATA = {
+                const GRADEBOOK_DATA = {
                     students: students,
                     assignments: assignments
                 };
 
-                localStorage.setItem( 'cachedGradeBookData', JSON.stringify( GRADEBOOKDATA ) );
-                callback( GRADEBOOKDATA.students, GRADEBOOKDATA.assignments );
+                localStorage.setItem( 'cachedGradeBookData', JSON.stringify( GRADEBOOK_DATA ) );
+                callback( GRADEBOOK_DATA.students, GRADEBOOK_DATA.assignments );
             } );
         } );
     }
