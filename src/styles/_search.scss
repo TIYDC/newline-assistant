@@ -3,3 +3,19 @@
     list-style: none;
     padding: 0;
 }
+
+nav.tiyo-assistant-search {
+    float: right;
+}
+
+form.tiyo-assistant-search [type=text] {
+    width: 40%;
+}
+
+.tiyo-assistant-search-age {
+    float: left;
+    margin-right: 1em;
+    font-size: 0.9em;
+    color: #666;
+    padding-top: 0.3em;
+}

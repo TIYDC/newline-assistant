@@ -56,6 +56,7 @@
     }
 
     function doSearch(query, indexData) {
+        $ui.find('.tiyo-assistant-notice').text('');
         $('.tiyo-assistant-search-results li').remove();
 
         if (!query) { return; }
@@ -96,7 +97,14 @@
             });
 
         let sortedResults = [];
-        Object.keys(results).forEach(function(id) {
+        let resultIDs = Object.keys(results);
+
+        if (!resultIDs.length) {
+            $ui.find('.tiyo-assistant-notice').text('Looks like there were no results!');
+            return;
+        }
+
+        resultIDs.forEach(function(id) {
             sortedResults.push(results[id]);
         });
         sortedResults.sort(function(a, b) {
