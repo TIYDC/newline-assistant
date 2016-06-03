@@ -70,7 +70,7 @@
 
       } catch (e) {}
 
-      resetUI();
+      resetUI( sessionData, $el );
 
       if ( gradebook_data ) {
           try {
