@@ -52,63 +52,63 @@
 
     function main( sessionData, $el ) {
         $( $el ).on( 'showing', function() {
-          show(sessionData, $el);
+            show( sessionData, $el );
         } );
     }
 
-    function show(sessionData, $el){
-      let gradebook_data;
+    function show( sessionData, $el ) {
+        let gradebook_data;
 
-      if ( uiBuilt ) {
-          return;
-      }
+        if ( uiBuilt ) {
+            return;
+        }
 
-      try {
-        gradebook_data = JSON.parse(
-          localStorage.getItem( 'cachedGradeBookData' )
-        );
+        try {
+            gradebook_data = JSON.parse(
+                localStorage.getItem( 'cachedGradeBookData' )
+            );
 
-      } catch (e) {}
+        } catch ( e ) {}
 
-      resetUI( sessionData, $el );
+        resetUI( sessionData, $el );
 
-      if ( gradebook_data ) {
-          try {
-              buildUI(
-                  $el,
-                  gradebook_data.students,
-                  gradebook_data.assignments
-              );
-          } catch ( e ) {
-              localStorage.removeItem( 'cachedGradeBookData' );
-          }
-      } else {
-          getGradebook(sessionData, $el);
-      }
+        if ( gradebook_data ) {
+            try {
+                buildUI(
+                    $el,
+                    gradebook_data.students,
+                    gradebook_data.assignments
+                );
+            } catch ( e ) {
+                localStorage.removeItem( 'cachedGradeBookData' );
+            }
+        } else {
+            getGradebook( sessionData, $el );
+        }
 
-      uiBuilt = true;
+        uiBuilt = true;
     }
 
 
     function getGradebook( sessionData, $el ) {
         console.info( "DDOSsing  TIYO" );
 
-        if (sessionData.group === null && sessionData.path === null) {
-          // Provide feedback to the user that we can't handle this.
-          return;
+        if ( sessionData.group === null && sessionData.path === null ) {
+            // Provide feedback to the user that we can't handle this.
+            return;
         }
 
         $( '#generate-score-card' ).text( "Processing" ).attr( "disabled", true );
 
         try {
-          scrape( sessionData.group.id, sessionData.path.id, function( students, assignments ) {
-              resetUI( sessionData, $el );
-              buildUI( $el, students, assignments );
-          } );
-        } catch (e) {
-          console.warn("it blewup", e);
+            scrape( sessionData.group.id, sessionData.path.id, function( students, assignments ) {
+                resetUI( sessionData, $el );
+                buildUI( $el, students, assignments );
+            } );
+        } catch ( e ) {
+            console.warn( "it blewup", e );
             // Wrap in try catch to show UI to user that something went wrong ( user permissions? )
-          $el.find('.tiyo-assistant-notice').text('There was a problem getting all the data for this gradebooks, do you own this path?!');
+            $el.find( '.tiyo-assistant-notice' ).text( 'There was a problem getting all the data for this gradebooks, do you own this path?!' );
         }
     }
 
@@ -118,9 +118,9 @@
         $el.html( '' );
         $el.append( TABLE_TEMPLATE );
 
-        $( '#generate-score-card' ).click( function () {
-          getGradebook( sessionData, $el );
-        });
+        $( '#generate-score-card' ).click( function() {
+            getGradebook( sessionData, $el );
+        } );
     }
 
     function buildUI( $el, students, assignments ) {
@@ -146,13 +146,13 @@
         row.append( $( '<th>' ).append( "Grade" ) );
 
         for ( let assignment of assignments ) {
-            row.append(`
+            row.append( `
               <th data-tooltip='${assignment.name}'>
                 <a href='${assignment.href}' title='${assignment.name}'>
                   ${assignment.name.slice( 0, 1 )}
                 </a>
               </th>
-            `);
+            ` );
         }
 
         return row;
@@ -162,43 +162,35 @@
         const studentRow = $( '<tr>' );
 
         studentRow.append(
-              `<td>
-                <a
-                href='/admin/users/${student.id}'
-                title='Grade: ${student.percentage}%'
-               >
+            `
+            <td>
+                <a href='/admin/users/${student.id}' title='Grade: ${student.percentage}%'>
                 ${student.name}
-              </a>
-              </td>
-              `
+                </a>
+            </td>
+            `
         );
 
         studentRow.append(
-          `<td>${student.percentage}%</td>`
+            `<td>${student.percentage}%</td>`
         );
 
         for ( let assignment of assignments ) {
             let submission = student.submissions[ assignment.id ];
 
             if ( submission ) {
+                let gradeClass = SHORT_GRADE_NAMES[ submission.grade ].toLowerCase();
                 studentRow.append(
-                  `
-                  <td
-                    class='grade ${SHORT_GRADE_NAMES[submission.grade].toLowerCase()}'
-                    date-tooltip='${assignment.name}'
-                  >
-                    <a href='${submission.href}'
-                      title='${assignment.name}%'
-                      target='blank'
-                    >
+                    `
+                  <td class='grade ${gradeClass}' date-tooltip='${assignment.name}' >
+                    <a href='${submission.href}' title='${assignment.name}%' target='blank' >
                       ${SHORT_GRADE_NAMES[ submission.grade ]}
                     </a>
-
                   </td>
                   `
                 );
             } else {
-                studentRow.append('<td></td>');
+                studentRow.append( '<td></td>' );
             }
         }
 
@@ -206,6 +198,8 @@
     }
 
     // Data Management +++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+    let idFromUrl = uri => Number( uri.substr( uri.lastIndexOf( '/' ) + 1 ) );
 
     function calculateGrades( students, assignments ) {
         if ( !students ) {
@@ -229,29 +223,29 @@
         return students;
     }
 
-
     function scrape( groupId, pathId, callback ) {
-
+        var states = [ 'public', 'current' ];
         var group = id => `https://online.theironyard.com/admin/groups/${ id }`;
         var path = id => `https://online.theironyard.com/admin/paths/${ id }`;
-
         var slice = c => [].slice.call( c );
         var qs = ( el, s ) => el.querySelector( s );
         var qsa = ( el, s ) => slice( el.querySelectorAll( s ) );
 
+        function scrapeStudentsFromGroup( html ) {
+            let dom = document.createElement( 'html' );
+            dom.innerHTML = html;
+
+            let students = qsa( dom, '#students table tbody tr' ).map( x =>
+                qs( qs( x, 'td' ), 'a' ).href );
+
+            return students;
+        }
+
         var getGroup = id => new Promise( ( res ) => {
             $.get( group( id ) ).then( html => {
-                var dom = document.createElement( 'html' );
-                dom.innerHTML = html;
-
-                var students = qsa( dom, '#students table tbody tr' ).map( x =>
-                    qs( qs( x, 'td' ), 'a' ).href );
-
-                res( students );
+                res( scrapeStudentsFromGroup( html ) );
             } );
         } );
-
-        var states = [ 'public', 'current' ];
 
         var getPath = id => new Promise( ( res ) => {
             $.get( path( id ) ).then( html => {
@@ -280,73 +274,67 @@
         var studentUrls = getGroup( groupId );
         var assignmentTitles = getPath( pathId );
 
+        function scrapeStudentPage( students, assignments, url, html ) {
+            var studentPage = document.createElement( 'html' );
+            studentPage.innerHTML = html;
+
+            var name = qs( studentPage, 'h1 strong' ).innerText;
+            let studentId = idFromUrl( url );
+
+            students[ studentId ] = {
+                id: studentId,
+                name: name,
+                percentage: null,
+                submissions: {}
+            };
+
+            qsa( studentPage, '#assignments table tbody tr' ).map( row => {
+
+                let studentSubmissionPath = qs( qsa( row, 'td' )[ 1 ], 'a' ).getAttribute( 'href' );
+                let assignmentPath = qs( row, 'td a' ).getAttribute( 'href' );
+
+                let submission = {
+                    id: idFromUrl( studentSubmissionPath ),
+                    grade: qs( qsa( row, 'td' )[ 2 ], 'label' ).innerText.trim(),
+                    href: studentSubmissionPath,
+                    submitted_at: moment( qsa( row, 'td' )[ 3 ].innerText.trim(), PARSING_TIME_FORMAT ),
+                    assignment: null
+                };
+
+                let assignmentId = idFromUrl( assignmentPath );
+                let assignment = assignments.find( function( a ) {
+                    return a.id === assignmentId;
+                } );
+
+                if ( assignment ) {
+                    if ( submission.submitted_at < assignment.first_submission_at ) {
+                        assignment.first_submission_at = submission.submitted_at;
+                    }
+                } else {
+                    assignment = {
+                        id: assignmentId,
+                        name: qs( row, 'td a' ).innerText,
+                        href: assignmentPath,
+                        first_submission_at: submission.submitted_at
+                    };
+                    assignments.push( assignment );
+                }
+
+                if ( !IGNORED_GRADES.includes( submission.grade ) ) {
+                    submission.assignment = assignment;
+                    students[ studentId ].submissions[ assignment.id ] = submission;
+                }
+
+            } );
+
+        }
+
         Promise.all( [ studentUrls, assignmentTitles ] ).then( ( [ s ] ) => {
             let students = {};
             let assignments = [];
 
-            let idFromUrl = ( href ) => {
-                return Number( href.substr( href.lastIndexOf( '/' ) + 1 ) );
-            };
-
             Promise.all( s.map( url => new Promise( ( res ) => {
-                $.get( url ).then( html => {
-
-                    var studentPage = document.createElement( 'html' );
-                    studentPage.innerHTML = html;
-
-                    var name = qs( studentPage, 'h1 strong' ).innerText;
-                    let studentId = idFromUrl( url );
-
-                    students[ studentId ] = {
-                        id: studentId,
-                        name: name,
-                        percentage: null,
-                        submissions: {}
-                    };
-
-
-                    qsa( studentPage, '#assignments table tbody tr' ).map(
-                        row => {
-
-                            let studentSubmissionPath = qs( qsa( row, 'td' )[ 1 ], 'a' ).getAttribute( 'href' );
-                            let assignmentPath = qs( row, 'td a' ).getAttribute( 'href' );
-
-                            let submission = {
-                                id: idFromUrl( studentSubmissionPath ),
-                                grade: qs( qsa( row, 'td' )[ 2 ], 'label' ).innerText.trim(),
-                                href: studentSubmissionPath,
-                                submitted_at: moment( qsa( row, 'td' )[ 3 ].innerText.trim(), PARSING_TIME_FORMAT ),
-                                assignment: null
-                            };
-
-                            let assignmentId = idFromUrl( assignmentPath );
-                            let assignment = assignments.find( function( a ) {
-                                return a.id === assignmentId;
-                            } );
-
-                            if (assignment) {
-                              if ( submission.submitted_at < assignment.first_submission_at ) {
-                                  assignment.first_submission_at = submission.submitted_at;
-                              }
-                            } else {
-                              assignment = {
-                                  id: assignmentId,
-                                  name: qs( row, 'td a' ).innerText,
-                                  href: assignmentPath,
-                                  first_submission_at: submission.submitted_at
-                              };
-                              assignments.push( assignment );
-                            }
-
-                            if ( !IGNORED_GRADES.includes( submission.grade ) ) {
-                                submission.assignment = assignment;
-                                students[ studentId ].submissions[ assignment.id ] = submission;
-                            }
-
-                        } );
-
-                    res();
-                } );
+                $.get( url ).then( html => res( scrapeStudentPage( students, assignments, url, html ) ) );
             } ) ) ).then( () => {
 
                 assignments.sort( function( a, b ) {
