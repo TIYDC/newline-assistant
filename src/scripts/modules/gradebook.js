@@ -7,11 +7,6 @@
         render: main
     } );
 
-    // HACK so we can not show the logged in instructor if they belong to the
-    // path
-    // Possible solution, tap into primary window
-    // $( "#IntercomSettingsScriptTag" ).text().replace("window.intercomSettings =", "").replace(";", "")
-    let user = eval( $( "#IntercomSettingsScriptTag" ).text() );
     let uiBuilt = false;
 
     const TABLE_TEMPLATE = `
@@ -75,6 +70,7 @@
         if ( gradebook_data ) {
             try {
                 buildUI(
+                    sessionData,
                     $el,
                     gradebook_data.students,
                     gradebook_data.assignments
@@ -103,7 +99,7 @@
         try {
             scrape( sessionData.group.id, sessionData.path.id, function( students, assignments ) {
                 resetUI( sessionData, $el );
-                buildUI( $el, students, assignments );
+                buildUI( sessionData, $el, students, assignments );
             } );
         } catch ( e ) {
             console.warn( "it blewup", e );
@@ -123,7 +119,7 @@
         } );
     }
 
-    function buildUI( $el, students, assignments ) {
+    function buildUI( sessionData, $el, students, assignments ) {
         const $table = $el.find( 'table' );
         $table.find( 'thead' )
             .append( buildAssignmentsHeader( assignments ) );
@@ -131,7 +127,7 @@
         const orderedStudents = Object.keys( students ).sort();
         for ( let studentId of orderedStudents ) {
             // Never display the instructor in the gradebook
-            if ( user.user_id.toString() === studentId ) {
+            if ( sessionData.user.user_id.toString() === studentId ) {
                 continue;
             }
 
@@ -292,7 +288,6 @@
 
                 let studentSubmissionPath = qs( qsa( row, 'td' )[ 1 ], 'a' ).getAttribute( 'href' );
                 let assignmentPath = qs( row, 'td a' ).getAttribute( 'href' );
-
                 let submission = {
                     id: idFromUrl( studentSubmissionPath ),
                     grade: qs( qsa( row, 'td' )[ 2 ], 'label' ).innerText.trim(),
