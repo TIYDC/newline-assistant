@@ -161,16 +161,19 @@
         const studentRow = $( '<tr>' );
 
         studentRow.append(
-            $( '<td>' ).append(
-                $( '<a>' )
-                .text( student.name )
-                .attr( "href", `/admin/users/${student.id}` )
-                .attr( 'title', `Grade: ${student.percentage}%` )
-            )
+              `<td>
+                <a
+                href='/admin/users/${student.id}'
+                title='Grade: ${student.percentage}%'
+               >
+                ${student.name}
+              </a>
+              </td>
+              `
         );
 
         studentRow.append(
-            $( '<td>' ).text( `${student.percentage}%` )
+          `<td>${student.percentage}%</td>`
         );
 
         for ( let assignment of assignments ) {
@@ -178,19 +181,23 @@
 
             if ( submission ) {
                 studentRow.append(
-                    $( '<td>' ).append(
-                        $( '<a>' ).text( SHORT_GRADE_NAMES[ submission.grade ] )
-                        .attr( 'href', submission.href )
-                        .attr( 'target', 'blank' )
-                        .attr( 'title', assignment.name )
-                    )
-                    .attr( 'data-tooltip', assignment.name )
-                    .addClass(
-                        `grade ${SHORT_GRADE_NAMES[submission.grade].toLowerCase()}`
-                    )
+                  `
+                  <td
+                    class='grade ${SHORT_GRADE_NAMES[submission.grade].toLowerCase()}'
+                    date-tooltip='${assignment.name}'
+                  >
+                    <a href='${submission.href}'
+                      title='${assignment.name}%'
+                      target='blank'
+                    >
+                      ${SHORT_GRADE_NAMES[ submission.grade ]}
+                    </a>
+
+                  </td>
+                  `
                 );
             } else {
-                studentRow.append( $( '<td>' ) );
+                studentRow.append('<td></td>');
             }
         }
 
