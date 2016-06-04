@@ -146,7 +146,7 @@
         if (!navUI) { return; }
 
         navUI.find('ul').append(
-            `<li data-module='${mod.name}'><i class='fa ${mod.navIcon} fa-lg' aria-hidden='true'></i></li>`
+            `<li data-module='${mod.name}' title='${mod.name}' aria-title='${mod.name}'><i class='fa ${mod.navIcon} fa-lg' aria-hidden='true'></i></li>`
         );
     }
 
