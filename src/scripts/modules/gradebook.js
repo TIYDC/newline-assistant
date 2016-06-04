@@ -108,6 +108,7 @@
         } catch (e) {
           console.warn("it blewup", e);
             // Wrap in try catch to show UI to user that something went wrong ( user permissions? )
+          $el.find('.tiyo-assistant-notice').text('There was a problem getting all the data for this gradebooks, do you own this path?!');
         }
     }
 
