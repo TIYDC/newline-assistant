@@ -75,6 +75,7 @@
       let cachedData = localStorage.getItem( 'tiyoAssistant' );
       if (cachedData === null) {
         return {
+            user: null,
             path: null,
             group: null,
             students: []
@@ -88,10 +89,25 @@
       localStorage.setItem( 'tiyoAssistant', JSON.stringify( data ) );
     }
 
+    function getUser() {
+      try {
+        return  JSON.parse(
+          $( "#IntercomSettingsScriptTag" )
+            .text()
+            .replace("window.intercomSettings =", "")
+            .replace(";", "")
+        );
+      } catch (e) {
+        return;
+      }
+    }
+
     function collectData() {
         let path = window.location.pathname.split(/\//),
             data = fetchOrBuildData(),
             group = $('.card-block dt:contains("Group")').next().find('a');
+
+        data.user = getUser();
 
         if (path.length === 4 && path[2] === 'paths') {
             data.path = {

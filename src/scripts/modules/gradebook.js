@@ -1,4 +1,4 @@
-( function( tiy, $ ) {
+( function( tiy, $, moment ) {
     'use strict';
 
     tiy.loadModule( {
@@ -7,146 +7,243 @@
         render: main
     } );
 
-    // HACK so we can not show the logged in instructor if they belong to the
-    // path
-    let user = eval( $( "#IntercomSettingsScriptTag" ).text() );
-
     let uiBuilt = false;
 
-    const shortGradeNames = {
+    const TABLE_TEMPLATE = `
+      <table class="table table-condensed">
+        <thead></thead>
+        <tbody></tbody>
+      </table>
+      <br>
+      <section class="actions">
+        <button type="button" class="btn btn-secondary btn-sm" id="generate-score-card">
+          <i class="fa fa-refresh"></i> Refresh Grades
+        </button>
+      </section>
+      `;
+
+    const SHORT_GRADE_NAMES = {
         'Exceeds expectations': 'E',
         'Complete and satisfactory': 'S',
         'Complete and unsatisfactory': 'U',
         'Incomplete': 'I',
-        'Not graded': ''
-    }
+        'Not graded': 'G',
+        'Retracted': 'R'
+    };
 
-    const okGrades = [
+    const OK_GRADES = [
         'Complete and satisfactory',
         'Exceeds expectations',
         'Not graded'
     ];
 
-    function main( data, el, c ) {
-        $(el).on('showing', function() {
-            if (uiBuilt) { return; }
-            
-            var students = JSON.parse( localStorage.getItem( 'cachedStudents' ) );
-            var assignments = JSON.parse( localStorage.getItem( 'cachedAssignments' ) );
-            students = calculateGrades( students );
-            console.log(students);
-            buildGradebookUI( el, students, assignments );
-            uiBuilt = true;
-        });
+    const IGNORED_GRADES = [
+        'Retracted'
+    ];
+
+    const PARSING_TIME_FORMAT = "MMM DD, YYYY hh:mm A";
+
+    // Behavior ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+    function main( sessionData, $el ) {
+        $( $el ).on( 'showing', function() {
+            show( sessionData, $el );
+        } );
+    }
+
+    function show( sessionData, $el ) {
+        let gradebook_data;
+
+        if ( uiBuilt ) {
+            return;
+        }
+
+        try {
+            gradebook_data = JSON.parse(
+                localStorage.getItem( 'cachedGradeBookData' )
+            );
+
+        } catch ( e ) {}
+
+        resetUI( sessionData, $el );
+
+        if ( gradebook_data ) {
+            try {
+                buildUI(
+                    sessionData,
+                    $el,
+                    gradebook_data.students,
+                    gradebook_data.assignments
+                );
+            } catch ( e ) {
+                localStorage.removeItem( 'cachedGradeBookData' );
+            }
+        } else {
+            getGradebook( sessionData, $el );
+        }
+
+        uiBuilt = true;
     }
 
 
-    // TODO Adapt math to New Data Structure
-    var calculateGrades = students => {
-        var status = '';
-        Object.keys( students ).map( ( name, i ) => {
-            var student = students[ name ];
-            var submissions = Object.keys( student );
-            var okCount = submissions.filter( t => {
-              console.log(student[ t ].submission.text,   okGrades.includes( student[ t ].submission.text ));
+    function getGradebook( sessionData, $el ) {
+        console.info( "DDOSsing  TIYO" );
 
-              return okGrades.includes( student[ t ].submission.text );
-            })
+        if ( sessionData.group === null && sessionData.path === null ) {
+            // Provide feedback to the user that we can't handle this.
+            return;
+        }
 
-            var percent = okCount.length / submissions.length * 100;
-            console.log(percent);
-            student.grade = percent.toFixed(0);
-        } );
+        $( '#generate-score-card' ).text( "Processing" ).attr( "disabled", true );
 
+        try {
+            scrape( sessionData.group.id, sessionData.path.id, function( students, assignments ) {
+                resetUI( sessionData, $el );
+                buildUI( sessionData, $el, students, assignments );
+            } );
+        } catch ( e ) {
+            console.warn( "it blewup", e );
+            // Wrap in try catch to show UI to user that something went wrong ( user permissions? )
+            $el.find( '.tiyo-assistant-notice' ).text( 'There was a problem getting all the data for this gradebooks, do you own this path?!' );
+        }
+    }
 
-        return students;
-    };
+    // UI ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-    function buildGradebookUI( $main, data, assignments ) {
-        $main.html( '' );
-        $main.append('<button type="button" class="btn btn-secondary" id="generate-score-card" name="generateScoreCard">Refresh GB</button></li>');
+    function resetUI( sessionData, $el ) {
+        $el.html( '' );
+        $el.append( TABLE_TEMPLATE );
 
         $( '#generate-score-card' ).click( function() {
-            console.info( "DDOSsing  TIYO" );
-            $( '#generate-score-card' ).text( "Processing" ).prop( "disabled", true );
-            generateGradebook( data.group.id, 118, function( students, assignments ) {
-                buildGradebookUI( el, students, assignments );
-            } );
+            getGradebook( sessionData, $el );
         } );
+    }
 
-        $main.append( '<table class=\"table table-condensed\"><tbody></tbody></table>' );
-        var $table = $main.find( 'table' );
-        var row = $( '<tr>' );
-        $table.prepend( '<thead>' );
-        row.append( $( '<th>' ).append( "Student" ) );
-        for ( var assignment in assignments ) {
-            row.append( $( '<th>' ).append( $( '<a>' )
-                .text( assignment.slice( 0, 1 ) )
-                .prop( 'href', assignments[ assignment ].href )
-                .prop( 'title', assignment )
-            ) );
-        }
-        $table.find( 'thead' ).append( row );
+    function buildUI( sessionData, $el, students, assignments ) {
+        const $table = $el.find( 'table' );
+        $table.find( 'thead' )
+            .append( buildAssignmentsHeader( assignments ) );
 
-        for ( var student in data ) {
+        const orderedStudents = Object.keys( students ).sort();
+        for ( let studentId of orderedStudents ) {
             // Never display the instructor in the gradebook
-            if ( user.name === student ) {
+            if ( sessionData.user.user_id.toString() === studentId ) {
                 continue;
             }
 
-            var studentRow = $( '<tr>' );
-
-            studentRow.append(
-              $( '<td>' ).append(
-                $('<a>')
-                  .text(student)
-                  .prop("href", "#")
-                  .prop('title', `Grade: ${data[student].grade}%`)
-              )
-            );
-
-            for ( assignment in assignments ) {
-                if ( data[ student ][ assignment ] ) {
-                    var submission = data[ student ][ assignment ].submission;
-                    studentRow.append( $( '<td>' ).append(
-                        $( '<a>' ).text( shortGradeNames[ submission.text ] )
-                        .prop( 'href', submission.href )
-                        .prop( 'target', 'blank' )
-                        .prop( 'title', assignment )
-
-                    ).addClass( `grade ${shortGradeNames[submission.text].toLowerCase()}` ) );
-                } else {
-                    studentRow.append( $( '<td>' ) );
-                }
-            }
-            $table.append( studentRow );
+            let student = students[ studentId ];
+            $table.append( buildStudentRow( student, assignments ) );
         }
     }
 
-    function generateGradebook( groupId, pathId, callback ) {
+    function buildAssignmentsHeader( assignments ) {
+        const row = $( '<tr>' );
+        row.append( $( '<th>' ).append( "Student" ) );
+        row.append( $( '<th>' ).append( "Grade" ) );
 
+        for ( let assignment of assignments ) {
+            row.append( `
+              <th data-tooltip='${assignment.name}'>
+                <a href='${assignment.href}' title='${assignment.name}'>
+                  ${assignment.name.slice( 0, 1 )}
+                </a>
+              </th>
+            ` );
+        }
+
+        return row;
+    }
+
+    function buildStudentRow( student, assignments ) {
+        const studentRow = $( '<tr>' );
+
+        studentRow.append(
+            `
+            <td>
+                <a href='/admin/users/${student.id}' title='Grade: ${student.percentage}%'>
+                ${student.name}
+                </a>
+            </td>
+            `
+        );
+
+        studentRow.append(
+            `<td>${student.percentage}%</td>`
+        );
+
+        for ( let assignment of assignments ) {
+            let submission = student.submissions[ assignment.id ];
+
+            if ( submission ) {
+                let gradeClass = SHORT_GRADE_NAMES[ submission.grade ].toLowerCase();
+                studentRow.append(
+                    `
+                  <td class='grade ${gradeClass}' date-tooltip='${assignment.name}' >
+                    <a href='${submission.href}' title='${assignment.name}%' target='blank' >
+                      ${SHORT_GRADE_NAMES[ submission.grade ]}
+                    </a>
+                  </td>
+                  `
+                );
+            } else {
+                studentRow.append( '<td></td>' );
+            }
+        }
+
+        return studentRow;
+    }
+
+    // Data Management +++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+    let idFromUrl = uri => Number( uri.substr( uri.lastIndexOf( '/' ) + 1 ) );
+
+    function calculateGrades( students, assignments ) {
+        if ( !students ) {
+            return;
+        }
+
+        // Question, What is the the best practice for building an uniq array
+        // of objects in JS.
+        Object.keys( students ).map( ( studentName ) => {
+            var student = students[ studentName ];
+
+            var submissions = Object.keys( student.submissions );
+
+            var okCount = submissions.filter( assignmentId => {
+                return OK_GRADES.includes( student.submissions[ assignmentId ].grade );
+            } );
+
+            var grade = okCount.length / assignments.length * 100;
+            student.percentage = grade.toFixed( 0 );
+        } );
+        return students;
+    }
+
+    function scrape( groupId, pathId, callback ) {
+        var states = [ 'public', 'current' ];
         var group = id => `https://online.theironyard.com/admin/groups/${ id }`;
         var path = id => `https://online.theironyard.com/admin/paths/${ id }`;
-
         var slice = c => [].slice.call( c );
         var qs = ( el, s ) => el.querySelector( s );
         var qsa = ( el, s ) => slice( el.querySelectorAll( s ) );
 
-        var getGroup = id => new Promise( ( res, rej ) => {
+        function scrapeStudentsFromGroup( html ) {
+            let dom = document.createElement( 'html' );
+            dom.innerHTML = html;
+
+            let students = qsa( dom, '#students table tbody tr' ).map( x =>
+                qs( qs( x, 'td' ), 'a' ).href );
+
+            return students;
+        }
+
+        var getGroup = id => new Promise( ( res ) => {
             $.get( group( id ) ).then( html => {
-                var dom = document.createElement( 'html' );
-                dom.innerHTML = html;
-
-                var students = qsa( dom, '#students table tbody tr' ).map( x =>
-                    qs( qs( x, 'td' ), 'a' ).href );
-
-                res( students );
+                res( scrapeStudentsFromGroup( html ) );
             } );
         } );
 
-        var states = [ 'public', 'current' ];
-
-        var getPath = id => new Promise( ( res, rej ) => {
+        var getPath = id => new Promise( ( res ) => {
             $.get( path( id ) ).then( html => {
                 var dom = document.createElement( 'html' );
                 dom.innerHTML = html;
@@ -161,8 +258,9 @@
 
                         var o = qs( aPage,
                             "#state option[selected='selected']" );
-                        if ( o && states.indexOf( o.value ) !== -1 ) titles.push(
-                            x.innerText );
+                        if ( o && states.indexOf( o.value ) !== -1 ) {
+                            titles.push( x.innerText );
+                        }
                     } ) );
 
                 $.when( ...promises ).then( () => res( titles ) );
@@ -172,54 +270,83 @@
         var studentUrls = getGroup( groupId );
         var assignmentTitles = getPath( pathId );
 
-        var keys = a => Object.keys( a );
+        function scrapeStudentPage( students, assignments, url, html ) {
+            var studentPage = document.createElement( 'html' );
+            studentPage.innerHTML = html;
 
+            var name = qs( studentPage, 'h1 strong' ).innerText;
+            let studentId = idFromUrl( url );
 
-        Promise.all( [ studentUrls, assignmentTitles ] ).then( ( [ s, a ] ) => {
-            var students = {};
-            var assignments = {};
+            students[ studentId ] = {
+                id: studentId,
+                name: name,
+                percentage: null,
+                submissions: {}
+            };
 
-            Promise.all( s.map( url => new Promise( ( res, rej ) => {
-                $.get( url ).then( html => {
-                    var studentPage = document.createElement( 'html' );
-                    studentPage.innerHTML = html;
+            qsa( studentPage, '#assignments table tbody tr' ).map( row => {
 
-                    var name = qs( studentPage, 'h1 strong' ).innerText;
-                    students[ name ] = {};
+                let studentSubmissionPath = qs( qsa( row, 'td' )[ 1 ], 'a' ).getAttribute( 'href' );
+                let assignmentPath = qs( row, 'td a' ).getAttribute( 'href' );
+                let submission = {
+                    id: idFromUrl( studentSubmissionPath ),
+                    grade: qs( qsa( row, 'td' )[ 2 ], 'label' ).innerText.trim(),
+                    href: studentSubmissionPath,
+                    submitted_at: moment( qsa( row, 'td' )[ 3 ].innerText.trim(), PARSING_TIME_FORMAT ),
+                    assignment: null
+                };
 
-                    qsa( studentPage, '#assignments table tbody tr' ).map(
-                        row => {
-                            var assignment = {
-                                text: qs( row, 'td a' ).innerText,
-                                href: qs( row, 'td a' ).getAttribute( 'href' )
-                            };
-
-                            assignments[ assignment.text ] = assignment;
-
-                            var status = {
-                                text: qs( qsa( row, 'td' )[ 2 ], 'label' ).innerText.trim(),
-                                href: qs( qsa( row, 'td' )[ 1 ], 'a' ).getAttribute( 'href' ),
-                                submitted_at: qsa( row, 'td' )[3].innerText.trim()
-                            };
-
-                            if ( status.text !== 'Retracted' ) {
-                                students[ name ][ assignment.text ] = {
-                                    assignment: assignment,
-                                    submission: status
-                                };
-                            }
-
-                        } );
-
-                    res();
+                let assignmentId = idFromUrl( assignmentPath );
+                let assignment = assignments.find( function( a ) {
+                    return a.id === assignmentId;
                 } );
+
+                if ( assignment ) {
+                    if ( submission.submitted_at < assignment.first_submission_at ) {
+                        assignment.first_submission_at = submission.submitted_at;
+                    }
+                } else {
+                    assignment = {
+                        id: assignmentId,
+                        name: qs( row, 'td a' ).innerText,
+                        href: assignmentPath,
+                        first_submission_at: submission.submitted_at
+                    };
+                    assignments.push( assignment );
+                }
+
+                if ( !IGNORED_GRADES.includes( submission.grade ) ) {
+                    submission.assignment = assignment;
+                    students[ studentId ].submissions[ assignment.id ] = submission;
+                }
+
+            } );
+
+        }
+
+        Promise.all( [ studentUrls, assignmentTitles ] ).then( ( [ s ] ) => {
+            let students = {};
+            let assignments = [];
+
+            Promise.all( s.map( url => new Promise( ( res ) => {
+                $.get( url ).then( html => res( scrapeStudentPage( students, assignments, url, html ) ) );
             } ) ) ).then( () => {
-                localStorage.setItem( 'cachedStudents', JSON.stringify( students ) );
-                localStorage.setItem( 'cachedAssignments', JSON.stringify( assignments ) );
-                callback( students, assignments );
+
+                assignments.sort( function( a, b ) {
+                    return new Date( b.first_submission_at ) - new Date( a.first_submission_at );
+                } );
+
+                students = calculateGrades( students, assignments );
+
+                const gradebook_data = {
+                    students: students,
+                    assignments: assignments
+                };
+
+                localStorage.setItem( 'cachedGradeBookData', JSON.stringify( gradebook_data ) );
+                callback( gradebook_data.students, gradebook_data.assignments );
             } );
         } );
     }
 
-
-} )( window.tiy || {}, window.jQuery );
+} )( window.tiy || {}, window.jQuery, window.moment );
