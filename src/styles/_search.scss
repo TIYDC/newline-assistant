@@ -19,6 +19,11 @@ form.tiyo-assistant-search [type=text] {
     border: 0.0625rem solid #ccc;
     border-radius: 0.25rem;
 }
+form.tiyo-assistant-search [type=text]:focus {
+    outline: none;
+    box-shadow: 0 0 5px rgba(81, 203, 238, 1);
+    border: 1px solid transparent;
+}
 
 .tiyo-assistant-search-age {
     float: left;
