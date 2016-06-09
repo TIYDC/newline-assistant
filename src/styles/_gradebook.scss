@@ -3,6 +3,7 @@
         td,
         th {
             font-size: 0.5em;
+            padding: 0;
             position: relative;
             &.u {
                 background-color: #e74c3c;
@@ -23,6 +24,8 @@
                 display: block;
                 width: 100%;
                 padding: 0.4rem !important;
+
+                text-align: center;
 
                 color: white;
             }
