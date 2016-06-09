@@ -26,7 +26,7 @@ While on a Path you can search all text in any lesson or assignment. Click on th
 
 > _Note: TIYO likes to throw 500 errors sometimes. Even one of these during the re-indexing means a bad index, and no data will be stored. You may need to run the indexing script multiple times._
 
-One the index is built, simply type you search query and hit enter. The results will appear immediately below the search box and will link to the pieces of content that query appears in.
+Once the index is built, simply type you search query and hit enter. The results will appear immediately below the search box and will link to the pieces of content that query appears in.
 
 ## To Hack On It
 
