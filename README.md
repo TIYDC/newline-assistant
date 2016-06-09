@@ -37,6 +37,8 @@ $ npm install -g grunt-cli
 $ git clone git@github.com:TIYDC/tiyo-assistant.git && cd tiyo-assistant && npm install && grunt
 ```
 
+While you're developing you can run `grunt watch` in a terminal window (inside the project directory) to keep the `build/` directory up to date.
+
 Now create your branch and hack away. When you're ready to test the extension, [enable developer extensions](https://developer.chrome.com/extensions/faq#faq-dev-01) in Chrome, then go to [your extensions](chrome://extensions/) and click the "Load unpacked extension..." button and navigate to the directory you cloned this repo into.
 
 ### Merging Back in and Releasing
