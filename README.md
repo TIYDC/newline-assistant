@@ -41,7 +41,7 @@ Now create your branch and hack away. When you're ready to test the extension, [
 
 ### Merging Back in and Releasing
 
-We are happy to accept PRs and will cut releases as necessary. The "release" process is simply updating the manifest and regenerating the `crx` file in the root. This was included in the repo to make it easier for other instructors to use the tool without having to build it as described above.
+We are happy to accept PRs and will cut releases as necessary. The "release" process is simply updating the manifest and regenerating the `crx` file in the root. This was included in the repo to make it easier for other instructors to use the tool without having to build it as described above. Note that to keep the `crx` file lean we can eliminate the `.git/`, `.sass-cache/`, and `src/` directories from the final product. The `crx` file itself is created by using the "Pack Extension" button within the chrome extensions settings page. And don't forget the `pem` file so that users can update their extension vs having to remove it first!
 
 ## Authors
 
