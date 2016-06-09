@@ -3,7 +3,7 @@
         td,
         th {
             font-size: 0.5em;
-            padding: 0.4rem !important;
+            padding: 0;
             position: relative;
             &.u {
                 background-color: #e74c3c;
@@ -21,6 +21,12 @@
                 background-color: #6fbbb7;
             }
             &.grade a {
+                display: block;
+                width: 100%;
+                padding: 0.4rem !important;
+
+                text-align: center;
+
                 color: white;
             }
             &[data-tooltip]:hover::after, &[data-tooltip]:focus::after {
