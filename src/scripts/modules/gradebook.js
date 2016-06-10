@@ -51,19 +51,25 @@
         } );
     }
 
-    function show( sessionData, $el ) {
-        let gradebook_data;
+    function loadCachedGradebooks() {
+      let gradebooks;
+      try {
+          gradebooks = JSON.parse(
+              localStorage.getItem( 'cachedGradeBookData' )
+          );
 
+      } catch ( e ) {}
+      gradebooks = gradebooks || {};
+      return gradebooks;
+    }
+
+    function show( sessionData, $el ) {
         if ( uiBuilt ) {
             return;
         }
 
-        try {
-            gradebook_data = JSON.parse(
-                localStorage.getItem( 'cachedGradeBookData' )
-            );
-
-        } catch ( e ) {}
+        let gradebooks = loadCachedGradebooks();
+        let gradebook_data = gradebooks[ sessionData.path.id ];
 
         resetUI( sessionData, $el );
 
@@ -221,7 +227,7 @@
 
     function scrape( groupId, pathId, callback ) {
         var group = id => `https://online.theironyard.com/admin/groups/${ id }`;
-        var path = id => `https://online.theironyard.com/admin/paths/${ id }`;
+        var pathURI = id => `https://online.theironyard.com/admin/paths/${ id }`;
         var slice = c => [].slice.call( c );
         var qs = ( el, s ) => el.querySelector( s );
         var qsa = ( el, s ) => slice( el.querySelectorAll( s ) );
@@ -243,27 +249,32 @@
         } );
 
         var getPath = id => new Promise( ( res ) => {
-            $.get( path( id ) ).then( html => {
+            let path = {
+              id: id,
+              title: null,
+              assignments: []
+            };
+
+            $.get( pathURI( id ) ).then( html => {
                 var dom = document.createElement( 'html' );
                 dom.innerHTML = html;
-
-                var titles = [];
 
                 qsa( dom, '.path-tree .assignment' ).map( x => {
                   let title = qs( x, "a.text-body" );
                   let hidden = qs( x, "#hidden-state" ).getAttribute("checked");
 
                   if ( !hidden ) {
-                    titles.push( title.innerText );
+                    path.assignments.push( title.innerText );
                   }
                 } );
 
-                res( titles );
+                res( path );
             } );
         } );
 
         var studentUrls = getGroup( groupId );
-        var assignmentTitles = getPath( pathId );
+        let path = getPath( pathId );
+        let assignmentTitles = path.assignments;
 
         function scrapeStudentPage( students, assignments, url, html ) {
             var studentPage = document.createElement( 'html' );
@@ -336,13 +347,19 @@
 
                 students = calculateGrades( students, assignments );
 
-                const gradebook_data = {
+                const gradebook = {
+                    id: path.id,
+                    title: path.title,
                     students: students,
-                    assignments: assignments
+                    assignments: assignments,
+                    scraped_at:  moment()
                 };
+                let gradebooks = loadCachedGradebooks();
 
-                localStorage.setItem( 'cachedGradeBookData', JSON.stringify( gradebook_data ) );
-                callback( gradebook_data.students, gradebook_data.assignments );
+                gradebooks[pathId] = gradebook;
+
+                localStorage.setItem( 'cachedGradeBookData', JSON.stringify( gradebooks ) );
+                callback( gradebook.students, gradebook.assignments );
             } );
         } );
     }
