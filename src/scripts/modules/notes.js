@@ -6,7 +6,7 @@
 
     let $ui = null;
     let pageData = {};
-    let pathData = {};
+    let notesData = {};
 
     tiy.loadModule({
         name: 'notes',
@@ -15,38 +15,85 @@
     });
 
     function main(data, elem) {
-        let notesData = {};
-
         $ui = $(elem);
         pageData = data;
-
-        if (!pageData.path || !pageData.path.id) {
-            return;
-        }
 
         try { notesData = JSON.parse(localStorage.getItem(NOTES_KEY) || '{}'); } catch(e) { /* let this go */ }
         console.info('loading notes module with notesData:', notesData);
 
-        if (notesData[pageData.path.id]) {
-            pathData = notesData[pageData.path.id];
+        if (!notesData) {
+            notesData = {};
+            localStorage.setItem(NOTES_KEY, JSON.stringify(notesData));
         }
 
-        addNoteIcons();
+        if (pageData.path && pageData.path.id) {
+            addNotesIcons();
+        }
     }
 
-    function addNoteIcons() {
+    function addNotesIcons() {
         $.get(chrome.extension.getURL(TEMPLATE)).then(function(html) {
             let notesModal = $(html);
-            $ui.append(notesModal);
+            $('body').append(notesModal);
             $('.path-tree-states').after($(`<i class='fa fa-sticky-note-o tiyo-assistant-note'></i>`));
+
             $('.path-tree').on('click', '.tiyo-assistant-note', function() {
-                showNoteModal($(this).parents('.lesson, .assignment'), notesModal);
+                showNotesModal($(this).parents('.lesson, .assignment'), notesModal);
+            });
+
+            notesModal.submit(saveNotes);
+            notesModal.find('.tiyo-assistant-note-cancel').click(function() {
+                notesModal.hide();
             });
         });
     }
 
-    function showNoteModal(content, modal) {
-        console.log('showing modal for', content, modal);
+    function showNotesModal(contentNode, modalNode) {
+        let id = contentNode.data('id').match(/^gid:\/\/online\/[^\/]+\/([0-9]+)$/);
+        if (!id) {
+            console.warn('content node is not a lesson or assignment.', contentNode);
+            return;
+        }
+        id = id[1];
+
+        console.log('showing modal for', id, modalNode);
+
+        let notes = notesData[id] || '';
+
+        modalNode
+            .attr('data-id', id)
+            .find('.tiyo-assistant-note-title')
+                .text(contentNode.find('.text-body').text())
+                .end()
+            .find('textarea')
+                .val(notes)
+                .end()
+            .css({
+                top: (contentNode.height() * 2) + contentNode.offset().top,
+                left: contentNode.offset().left
+            })
+            .show();
+    }
+
+    function saveNotes(e) {
+        e.preventDefault();
+
+        let $form = $(this);
+        let id = Number($form.data('id'));
+
+        if (!id) {
+            console.warn('Unable to save notes, not id!', this);
+            return $form.hide();
+        }
+
+        let notes = $form.find('textarea').val();
+
+        console.info('Saving notes for %d: %s', id, notes);
+
+        notesData[''+id] = notes;
+        localStorage.setItem(NOTES_KEY, JSON.stringify(notesData));
+
+        $form.hide();
     }
 
 

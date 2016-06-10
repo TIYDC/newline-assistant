@@ -1,11 +1,36 @@
 
-.tiyo-assistant-note {
+i.tiyo-assistant-note {
     display: inline-block;
     float: right;
     padding-top: 3px;
     margin-right: 0.8em;
     cursor: pointer;
 }
-.tiyo-assistant-note:hover {
+i.tiyo-assistant-note:hover {
     color: #999;
+}
+
+form.tiyo-assistant-note {
+    display: none;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 40%;
+    background-color: #fff;
+    padding: 1em;
+
+    textarea {
+        width: 100%;
+        height: 6em;
+    }
+}
+
+.tiyo-assistant-note-save {
+    float: right;
+
+    &::after {
+        content: "";
+        display: table;
+        clear: both;
+    }
 }
