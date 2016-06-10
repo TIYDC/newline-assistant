@@ -220,7 +220,6 @@
     }
 
     function scrape( groupId, pathId, callback ) {
-        var states = [ 'public', 'current' ];
         var group = id => `https://online.theironyard.com/admin/groups/${ id }`;
         var path = id => `https://online.theironyard.com/admin/paths/${ id }`;
         var slice = c => [].slice.call( c );
@@ -250,20 +249,16 @@
 
                 var titles = [];
 
-                var promises = qsa( dom, '.assignment a.text-body' ).map( x => $
-                    .get(
-                        x.href ).then( html => {
-                        var aPage = document.createElement( 'html' );
-                        aPage.innerHTML = html;
+                qsa( dom, '.path-tree .assignment' ).map( x => {
+                  let title = qs( x, "a.text-body" );
+                  let hidden = qs( x, "#hidden-state" ).getAttribute("checked");
 
-                        var o = qs( aPage,
-                            "#state option[selected='selected']" );
-                        if ( o && states.indexOf( o.value ) !== -1 ) {
-                            titles.push( x.innerText );
-                        }
-                    } ) );
+                  if ( !hidden ) {
+                    titles.push( title.innerText );
+                  }
+                } );
 
-                $.when( ...promises ).then( () => res( titles ) );
+                res( titles );
             } );
         } );
 
