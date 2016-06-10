@@ -166,7 +166,10 @@
             $table.append( buildStudentRow( student, assignments ) );
         }
 
-        $el.find('#path-title').text(gradebook.title);
+        $el.find('#path-title').html(
+          `<a href='/admin/paths/${sessionData.path.id}'>
+          ${gradebook.title}
+          </a>`);
         $el.find('#last-scraped').text(moment(gradebook.scraped_at).fromNow());
 
     }
