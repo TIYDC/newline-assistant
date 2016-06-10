@@ -317,7 +317,10 @@
 
                 if ( !IGNORED_GRADES.includes( submission.grade ) ) {
                     submission.assignment = assignment;
-                    students[ studentId ].submissions[ assignment.id ] = submission;
+                    let existingSubmission = students[ studentId ].submissions[ assignment.id ];
+                    if ( !( existingSubmission && existingSubmission.submitted_at > submission.submitted_at ) ) {
+                      students[ studentId ].submissions[ assignment.id ] = submission;
+                    }
                 }
 
             } );
