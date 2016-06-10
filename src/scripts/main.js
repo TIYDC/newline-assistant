@@ -15,7 +15,7 @@
 
     const MAIN_TEMPLATE = 'build/templates/main.html';
     const NAV_TEMPLATE = 'build/templates/nav.html';
-    const PANEL_ANIMATION_TIME = 200
+    const PANEL_ANIMATION_TIME = 200;
 
     function main() {
         console.info('Initializing TIYO assistant');
@@ -23,96 +23,92 @@
         addFontAwesomeStyleSheet();
 
         collectData()
-            .then(function getNavUI(data) {
-                tiyoData = data;
-                dataLoaded = true;
-                console.log('Data gathered', data);
-                return $.get(chrome.extension.getURL(NAV_TEMPLATE));
-            })
-            .then(function getMainUI(html) {
-                navUI = $(html);
-                $('.main .header:first').append(navUI);
+        .then(function getNavUI(data) {
+            tiyoData = data;
+            dataLoaded = true;
+            console.log('Data gathered', data);
+            return $.get(chrome.extension.getURL(NAV_TEMPLATE));
+        })
+        .then(function getMainUI(html) {
+            navUI = $(html);
+            $('.main .header:first').append(navUI);
 
-                modulesLoaded.forEach(addNavIcon);
-                navUI.on('click', 'li', toggleModuleUI);
+            modulesLoaded.forEach(addNavIcon);
+            navUI.on('click', 'li', toggleModuleUI);
 
-                return $.get(chrome.extension.getURL(MAIN_TEMPLATE));
-            })
-            .then(function callModuleRenders(html) {
-                mainUI = $(html);
-                $('.main .content').prepend(mainUI);
-                uiLoaded = true;
+            return $.get(chrome.extension.getURL(MAIN_TEMPLATE));
+        })
+        .then(function callModuleRenders(html) {
+            mainUI = $(html);
+            $('.main .content').prepend(mainUI);
+            uiLoaded = true;
 
-                setupContentClose();
+            setupContentClose();
 
-                console.log('UI base loaded, calling render methods', mainUI);
-                modulesLoaded.forEach(function(mod) {
-                    doRender(mod);
-                });
+            console.log('UI base loaded, calling render methods', mainUI);
+            modulesLoaded.forEach(function(mod) {
+                doRender(mod);
             });
+        });
     }
 
     /**
-     * Chrome extensions have issues with access files from css like fonts, so
-     * we need to embed the styelsheet using the chromse extension URL, which
-     * is dynamically generated. The remainder of the FA styles are in a static
-     * stylesheet in /vendor
-     */
+    * Chrome extensions have issues with access files from css like fonts, so
+    * we need to embed the styelsheet using the chromse extension URL, which
+    * is dynamically generated. The remainder of the FA styles are in a static
+    * stylesheet in /vendor
+    */
     function addFontAwesomeStyleSheet() {
         $('head').append(
             $('<style>')
-                .attr('type', 'text/css')
-                .text(
-                    `@font-face {
-                        font-family: FontAwesome;
-                        src: url('${chrome.extension.getURL('vendor/fontawesome-webfont.woff')}');
-                    }`
-                )
+            .attr('type', 'text/css')
+            .text(
+                `@font-face {
+                    font-family: FontAwesome;
+                    src: url('${chrome.extension.getURL('vendor/fontawesome-webfont.woff')}');
+                }`
+            )
         );
-    }
-
-    function fetchOrBuildData(){
-      let cachedData = localStorage.getItem( 'tiyoAssistant' );
-      if (cachedData === null) {
-        return {
-            user: null,
-            path: null,
-            group: null,
-            students: []
-        }
-      } else {
-        return JSON.parse(cachedData);
-      }
-    }
-
-    function setStoredData(data) {
-      localStorage.setItem( 'tiyoAssistant', JSON.stringify( data ) );
     }
 
     function getUser() {
-      try {
-        return  JSON.parse(
-          $( "#IntercomSettingsScriptTag" )
-            .text()
-            .replace("window.intercomSettings =", "")
-            .replace(";", "")
-        );
-      } catch (e) {
-        return;
-      }
+        try {
+            return  JSON.parse(
+                $( "#IntercomSettingsScriptTag" )
+                .text()
+                .replace("window.intercomSettings =", "")
+                .replace(";", "")
+            );
+        } catch (e) {
+            return;
+        }
     }
 
     function collectData() {
-        let path = window.location.pathname.split(/\//),
-            data = fetchOrBuildData(),
+        let pathname = window.location.pathname.split(/\//),
+            data = {
+                user: null,
+                path: null,
+                content: null,
+                group: null,
+                students: []
+            },
             group = $('.card-block dt:contains("Group")').next().find('a');
 
         data.user = getUser();
 
-        if (path.length === 4 && path[2] === 'paths') {
+        if (pathname.length === 4 && pathname[2] === 'paths') {
             data.path = {
-                id: Number(path[3]),
+                id: Number(pathname[3]),
                 title: $('.content .breadcrumb li:eq(1)').text()
+            };
+        }
+
+        if (pathname.length === 4 && (pathname[2] === 'lessons' || pathname[2] === 'assignments')) {
+            data.content = {
+                id: Number(pathname[3]),
+                title: $('.content .breadcrumb li:last-child').text(),
+                type: pathname[2]
             };
         }
 
@@ -132,7 +128,6 @@
                         name: studentElem.text()
                     });
                 });
-                setStoredData(data);
                 return data;
             });
         } else {
@@ -157,14 +152,14 @@
         if (!mod.length) { return; }
 
         if (moduleDisplayed === mod[0].name) {
-          console.log('hiding ', mod[0]);
-          closeContent(e);
+            console.log('hiding ', mod[0]);
+            closeContent(e);
         } else {
-          console.log('showing ', mod[0]);
-          moduleDisplayed = mod[0].name;
-          $('.tiyo-assistant-module').hide();
-          $(`[data-module="${mod[0].name}"]`).show().trigger('showing');
-          mainUI.slideDown(PANEL_ANIMATION_TIME);
+            console.log('showing ', mod[0]);
+            moduleDisplayed = mod[0].name;
+            $('.tiyo-assistant-module').hide();
+            $(`[data-module="${mod[0].name}"]`).show().trigger('showing');
+            mainUI.slideDown(PANEL_ANIMATION_TIME);
         }
     }
 
@@ -208,6 +203,5 @@
     main();
     // Then export our module API
     window.tiy = tiy;
-    console.log(window.tiy);
 
 })(window.tiy || {}, window.jQuery);
