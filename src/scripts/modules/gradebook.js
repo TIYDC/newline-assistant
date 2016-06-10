@@ -255,28 +255,10 @@
     }
 
     function scrape( sessionData, callback ) {
-        var group = id => `https://online.theironyard.com/admin/groups/${ id }`;
+        var userURI = id => `https://online.theironyard.com/admin/users/${id}`;
         var slice = c => [].slice.call( c );
         var qs = ( el, s ) => el.querySelector( s );
         var qsa = ( el, s ) => slice( el.querySelectorAll( s ) );
-
-        function scrapeStudentsFromGroup( html ) {
-            let dom = document.createElement( 'html' );
-            dom.innerHTML = html;
-
-            let students = qsa( dom, '#students table tbody tr' ).map( x =>
-                qs( qs( x, 'td' ), 'a' ).href );
-
-            return students;
-        }
-
-        var getGroup = id => new Promise( ( res ) => {
-            $.get( group( id ) ).then( html => {
-                res( scrapeStudentsFromGroup( html ) );
-            } );
-        } );
-
-        var studentUrls = getGroup( sessionData.group.id );
 
         function scrapeStudentPage( students, assignments, url, html ) {
             var studentPage = document.createElement( 'html' );
@@ -335,12 +317,12 @@
 
         }
 
-        Promise.all( [ studentUrls ] ).then( ( [ s ] ) => {
+        Promise.all( [ sessionData.students ] ).then( ( [ s ] ) => {
             let students = {};
             let assignments = [];
 
-            Promise.all( s.map( url => new Promise( ( res ) => {
-                $.get( url ).then( html => res( scrapeStudentPage( students, assignments, url, html ) ) );
+            Promise.all( s.map( s => new Promise( ( res ) => {
+                $.get( userURI(s.id) ).then( html => res( scrapeStudentPage( students, assignments, userURI(s.id), html ) ) );
             } ) ) ).then( () => {
 
                 assignments.sort( function( a, b ) {
