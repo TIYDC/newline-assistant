@@ -10,6 +10,8 @@
     let uiBuilt = false;
 
     const TABLE_TEMPLATE = `
+      <h6 id='path-title'></h6>
+
       <table class="table table-condensed">
         <thead></thead>
         <tbody></tbody>
@@ -19,6 +21,10 @@
         <button type="button" class="btn btn-secondary btn-sm" id="generate-score-card">
           <i class="fa fa-refresh"></i> Refresh Grades
         </button>
+        <small class='text-muted'>
+          as of
+          <span id='last-scraped'>Never</span>
+        </small>
       </section>
       `;
 
@@ -78,8 +84,7 @@
                 buildUI(
                     sessionData,
                     $el,
-                    gradebook_data.students,
-                    gradebook_data.assignments
+                    gradebook_data
                 );
             } catch ( e ) {
                 localStorage.removeItem( 'cachedGradeBookData' );
@@ -103,9 +108,9 @@
         $( '#generate-score-card' ).text( "Processing" ).attr( "disabled", true );
 
         try {
-            scrape( sessionData.group.id, sessionData.path.id, function( students, assignments ) {
+            scrape( sessionData, function( gradebook ) {
                 resetUI( sessionData, $el );
-                buildUI( sessionData, $el, students, assignments );
+                buildUI( sessionData, $el, gradebook );
             } );
         } catch ( e ) {
             console.warn( "it blewup", e );
@@ -125,7 +130,9 @@
         } );
     }
 
-    function buildUI( sessionData, $el, students, assignments ) {
+    function buildUI( sessionData, $el, gradebook ) {
+      let students = gradebook.students;
+      let assignments = gradebook.assignments;
         const $table = $el.find( 'table' );
         $table.find( 'thead' )
             .append( buildAssignmentsHeader( assignments ) );
@@ -140,6 +147,10 @@
             let student = students[ studentId ];
             $table.append( buildStudentRow( student, assignments ) );
         }
+
+        $el.find('#path-title').text(gradebook.title);
+        $el.find('#last-scraped').text(moment(gradebook.scraped_at).fromNow());
+
     }
 
     function buildAssignmentsHeader( assignments ) {
@@ -225,9 +236,8 @@
         return students;
     }
 
-    function scrape( groupId, pathId, callback ) {
+    function scrape( sessionData, callback ) {
         var group = id => `https://online.theironyard.com/admin/groups/${ id }`;
-        var pathURI = id => `https://online.theironyard.com/admin/paths/${ id }`;
         var slice = c => [].slice.call( c );
         var qs = ( el, s ) => el.querySelector( s );
         var qsa = ( el, s ) => slice( el.querySelectorAll( s ) );
@@ -248,33 +258,7 @@
             } );
         } );
 
-        var getPath = id => new Promise( ( res ) => {
-            let path = {
-              id: id,
-              title: null,
-              assignments: []
-            };
-
-            $.get( pathURI( id ) ).then( html => {
-                var dom = document.createElement( 'html' );
-                dom.innerHTML = html;
-
-                qsa( dom, '.path-tree .assignment' ).map( x => {
-                  let title = qs( x, "a.text-body" );
-                  let hidden = qs( x, "#hidden-state" ).getAttribute("checked");
-
-                  if ( !hidden ) {
-                    path.assignments.push( title.innerText );
-                  }
-                } );
-
-                res( path );
-            } );
-        } );
-
-        var studentUrls = getGroup( groupId );
-        let path = getPath( pathId );
-        let assignmentTitles = path.assignments;
+        var studentUrls = getGroup( sessionData.group.id );
 
         function scrapeStudentPage( students, assignments, url, html ) {
             var studentPage = document.createElement( 'html' );
@@ -333,7 +317,7 @@
 
         }
 
-        Promise.all( [ studentUrls, assignmentTitles ] ).then( ( [ s ] ) => {
+        Promise.all( [ studentUrls ] ).then( ( [ s ] ) => {
             let students = {};
             let assignments = [];
 
@@ -346,20 +330,19 @@
                 } );
 
                 students = calculateGrades( students, assignments );
-
                 const gradebook = {
-                    id: path.id,
-                    title: path.title,
+                    id: sessionData.path.id,
+                    title: sessionData.path.title,
                     students: students,
                     assignments: assignments,
                     scraped_at:  moment()
                 };
                 let gradebooks = loadCachedGradebooks();
 
-                gradebooks[pathId] = gradebook;
+                gradebooks[sessionData.path.id] = gradebook;
 
                 localStorage.setItem( 'cachedGradeBookData', JSON.stringify( gradebooks ) );
-                callback( gradebook.students, gradebook.assignments );
+                callback( gradebook );
             } );
         } );
     }
