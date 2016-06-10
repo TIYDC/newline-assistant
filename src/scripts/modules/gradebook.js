@@ -69,9 +69,32 @@
       return gradebooks;
     }
 
+    function loadCachedSession() {
+      let session;
+      try {
+          session = JSON.parse(
+              localStorage.getItem( 'cachedGradeBookDataSession' )
+          );
+      } catch ( e ) {}
+      session = session || { path: null };
+      return session;
+    }
+
     function show( sessionData, $el ) {
         if ( uiBuilt ) {
             return;
+        }
+
+        let cachedSession = loadCachedSession();
+        console.log(sessionData, cachedSession);
+        if ( sessionData.path === null && cachedSession.path === null ) {
+            // Provide feedback to the user that we can't handle this.
+            $el.text( 'Have you visited a path recently, we don\'t know what gradebook you want to see, go to a path you own and try again?!' );
+            return;
+        } else if ( sessionData.path === null && cachedSession.path !== null  ) {
+          sessionData = cachedSession;
+        } else {
+          localStorage.setItem( 'cachedGradeBookDataSession', JSON.stringify(sessionData) );
         }
 
         let gradebooks = loadCachedGradebooks();
@@ -99,11 +122,6 @@
 
     function getGradebook( sessionData, $el ) {
         console.info( "DDOSsing  TIYO" );
-
-        if ( sessionData.group === null && sessionData.path === null ) {
-            // Provide feedback to the user that we can't handle this.
-            return;
-        }
 
         $( '#generate-score-card' ).text( "Processing" ).attr( "disabled", true );
 
