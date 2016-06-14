@@ -217,7 +217,7 @@
                 studentRow.append(
                     `
                   <td class='grade ${gradeClass}' date-tooltip='${assignment.name}' >
-                    <a href='${submission.href}' title='${assignment.name}%' target='blank' >
+                    <a href='${submission.href}' title='${assignment.name}' target='blank' >
                       ${SHORT_GRADE_NAMES[ submission.grade ]}
                     </a>
                   </td>
