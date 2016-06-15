@@ -58,6 +58,18 @@
         });
     }
 
+    function setupForm(form, content, notes) {
+        return form
+            .attr('data-id', content.id)
+            .find('.tiyo-assistant-note-title')
+                .text(content.title)
+                .end()
+            .find('textarea')
+                .val(notes)
+                .end()
+            .show();
+    }
+
     function showNotesModal(contentNode, modalNode) {
         let id = contentNode.data('id').match(/^gid:\/\/online\/[^\/]+\/([0-9]+)$/);
         if (!id) {
@@ -66,67 +78,46 @@
         }
         id = id[1];
 
-        console.log('showing modal for', id, modalNode);
-
         let notes = notesData[id] || '';
 
-        modalNode
-            .attr('data-id', id)
-            .find('.tiyo-assistant-note-title')
-                .text(contentNode.find('.text-body').text())
-                .end()
-            .find('textarea')
-                .val(notes)
-                .end()
+        setupForm(modalNode, {
+            id: id,
+            title: contentNode.find('.text-body').text()
+        }, notes)
             .css({
                 top: (contentNode.height() * 2) + contentNode.offset().top,
                 left: contentNode.offset().left
-            })
-            .show();
+            });
     }
 
     function addEditContentNotesUI() {
         let notes = notesData[pageData.content.id] || '';
+
         $.get(chrome.extension.getURL(NOTES_TEMPLATE)).then(function(html) {
-            $ui.append(html)
-                .find('form')
-                    .attr('data-id', pageData.content.id)
-                    .find('.tiyo-assistant-note-title')
-                        .text(pageData.content.title)
-                        .end()
-                    .find('textarea')
-                        .val(notes)
-                        .end()
-                    .find('.tiyo-assistant-note-cancel')
-                        .remove()
-                        .end()
-                    .show()
-                    .submit(saveNotes);
+            let $form = $ui.append(html).find('form');
+
+            setupForm($form, pageData.content, notes)
+                .submit(saveNotes)
+                .find('.tiyo-assistant-note-cancel')
+                    .remove();
         });
     }
 
     function addViewContentNotesUI() {
         let notes = notesData[pageData.content.id] || '';
         $.get(chrome.extension.getURL(NOTES_TEMPLATE)).then(function(html) {
-            $('.l-content .py2')
+            let $form = $('.l-content .py2')
                 .after(
                     $(`<section class='tiyo-assistant-notes-container'></section>`)
                         .append(html)
                 )
                 .next('.tiyo-assistant-notes-container')
-                    .find('form')
-                    .attr('data-id', pageData.content.id)
-                    .find('.tiyo-assistant-note-title')
-                        .text(pageData.content.title)
-                        .end()
-                    .find('textarea')
-                        .val(notes)
-                        .end()
-                    .find('.tiyo-assistant-note-cancel')
-                        .remove()
-                        .end()
-                    .show()
-                    .submit(saveNotes);
+                    .find('form');
+
+            setupForm($form, pageData.content, notes)
+                .submit(saveNotes)
+                .find('.tiyo-assistant-note-cancel')
+                    .remove();
         });
     }
 
