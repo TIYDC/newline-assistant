@@ -3,6 +3,7 @@
 
     const NOTES_KEY = 'tiyo-notes';
     const NOTES_TEMPLATE = 'build/templates/notes.html';
+    const PATH_NOTES_TEMPLATE = 'build/templates/notes_path.html';
 
     let $ui = null;
     let pageData = {};
@@ -33,6 +34,61 @@
         } else if (pageData.content && pageData.content.id) {
             addViewContentNotesUI();
         }
+
+        setupImportExport();
+    }
+
+    function setupImportExport() {
+        $.get(chrome.extension.getURL(PATH_NOTES_TEMPLATE)).then(function(html) {
+            $ui.append(html)
+                .find('.tiyo-assistant-notes-import')
+                    .submit(importNotes);
+            updateNotesExport();
+        });
+    }
+
+    function updateNotesExport() {
+        let data = `data:text/json;charset=utf-8,${encodeURIComponent(JSON.stringify(notesData))}`;
+        $('.tiyo-assistant-notes-export').attr('href', data);
+    }
+
+    function importNotes(e) {
+        e.preventDefault();
+        $('.tiyo-assistant-notice').text('');
+
+        let $fileInput = $(this).find('[type=file]');
+        let reader = new FileReader();
+
+        reader.onload = function(readEvent) {
+            let data = null;
+            try {
+                data = JSON.parse(readEvent.target.result);
+            } catch(err) {
+                $('.tiyo-assistant-notice').text('It looks like that is not a valid JSON file!');
+            }
+            console.info('importing data', data);
+            $fileInput.val('');
+
+            if (data) {
+                mergeNotesData(data);
+                $('.tiyo-assistant-notice').text('Notes data imported and merged!');
+            }
+        };
+        reader.readAsText($fileInput[0].files[0]);
+    }
+
+    function mergeNotesData(newData) {
+        Object.keys(newData).forEach(function(id) {
+            if (!Number(id)) { return; }
+
+            if (notesData[id] && notesData[id] !== newData[id]) {
+                notesData[id] += `\n\n**IMPORTED**\n${newData[id]}`;
+            } else {
+                notesData[id] = newData[id];
+            }
+        });
+        localStorage.setItem(NOTES_KEY, JSON.stringify(notesData));
+        updateNotesExport();
     }
 
     function addNotesIcons() {
@@ -138,6 +194,7 @@
 
         notesData[''+id] = notes;
         localStorage.setItem(NOTES_KEY, JSON.stringify(notesData));
+        updateNotesExport();
     }
 
 
