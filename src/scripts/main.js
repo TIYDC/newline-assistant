@@ -104,10 +104,10 @@
             };
         }
 
-        if (pathname.length === 4 && (pathname[2] === 'lessons' || pathname[2] === 'assignments')) {
+        if (pathname.length > 3 && (pathname[2] === 'lessons' || pathname[2] === 'assignments')) {
             data.content = {
                 id: Number(pathname[3]),
-                title: $('.content .breadcrumb li:last-child').text(),
+                title: $('.content .breadcrumb li:eq(3)').text(),
                 type: pathname[2]
             };
         }
