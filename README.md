@@ -14,7 +14,7 @@ This is a chrome extension to assist with The Iron Yard Online for instructors. 
 
 ### Install It
 
-Clone this repo, then go to [chrome://extensions](chrome://extensions) in your browser. Drag the `tiyo-assistant-1.0.crx` file from this directory onto that page. That's it!
+Download the `crx` file from one of the [releases on GitHub](https://github.com/TIYDC/tiyo-assistant/releases), then go to [chrome://extensions](chrome://extensions) in your browser and drag the `tiyo-assistant-x.y.z.crx` file you downloaded onto that page. That's it!
 
 ### Gradebook
 
