@@ -2,8 +2,8 @@
     'use strict';
 
     const NOTES_KEY = 'tiyo-notes';
-    const NOTES_TEMPLATE = 'build/templates/notes.html';
-    const PATH_NOTES_TEMPLATE = 'build/templates/notes_path.html';
+    const NOTES_TEMPLATE = 'templates/notes.html';
+    const PATH_NOTES_TEMPLATE = 'templates/notes_path.html';
 
     let $ui = null;
     let pageData = {};

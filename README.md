@@ -61,11 +61,11 @@ $ git clone git@github.com:TIYDC/tiyo-assistant.git && cd tiyo-assistant && npm 
 
 While you're developing you can run `grunt watch` in a terminal window (inside the project directory) to keep the `build/` directory up to date.
 
-Now create your branch and hack away. When you're ready to test the extension, [enable developer extensions](https://developer.chrome.com/extensions/faq#faq-dev-01) in Chrome, then go to [your extensions](chrome://extensions/) and click the "Load unpacked extension..." button and navigate to the directory you cloned this repo into.
+Now create your branch and hack away. When you're ready to test the extension, [enable developer extensions](https://developer.chrome.com/extensions/faq#faq-dev-01) in Chrome, then go to [your extensions](chrome://extensions/) and click the "Load unpacked extension..." button and navigate to the `build/` directory inside your project.
 
 ### Merging Back in and Releasing
 
-We are happy to accept PRs and will cut releases as necessary. The "release" process is simply updating the manifest and regenerating the `crx` file in the root. This was included in the repo to make it easier for other instructors to use the tool without having to build it as described above. Note that to keep the `crx` file lean we can eliminate the `.git/`, `.sass-cache/`, and `src/` directories from the final product. The `crx` file itself is created by using the "Pack Extension" button within the chrome extensions settings page. And don't forget the `pem` file so that users can update their extension vs having to remove it first!
+We are happy to accept PRs and will cut releases as necessary. The "release" process is simply updating the manifest/package.json and regenerating the `crx` file from the `build/` directory. The `crx` file itself is created by using the "Pack Extension" button within the chrome extensions settings page. And don't forget the `pem` file so that users can update their extension vs having to remove it first! (Note that this file is shared among authors to keep it out of the repo.)
 
 ## Authors
 

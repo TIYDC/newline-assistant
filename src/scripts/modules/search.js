@@ -2,7 +2,7 @@
     'use strict';
 
     const INDEX_ITEM = 'tiyo-search-index';
-    const TEMPLATE = 'build/templates/search.html';
+    const TEMPLATE = 'templates/search.html';
     const SCRAPE_BASE = 'https://online.theironyard.com';
     const FILLERS = /\b(an|and|are(n\'t)?|as|at|be|but|by|do(es)?(n\'t)?|for|from|if|in|into|is(n\'t)?|it\'?s?|no|none|not|of|on|or|such|that|the|theirs?|then|there(\'s)?|these|they|this|to|us|was|we|will|with|won\'t|you\'?r?e?)\b/g;
 

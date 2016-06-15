@@ -12,6 +12,17 @@ module.exports = function(grunt) {
                 files: [
                     { expand: true, cwd: 'src/', src: ['templates/**'], dest: 'build/' }
                 ]
+            },
+            vendor: {
+                files: [
+                    { expand: true, src: ['vendor/**'], dest: 'build/' }
+                ]
+            },
+            meta: {
+                files: [
+                    { expand: true, src: ['manifest.json', 'LICENSE', 'README.md'], dest: 'build/' },
+                    { src: ['TIY-logo-thumb.jpg'], dest: 'build/' }
+                ]
             }
         },
 

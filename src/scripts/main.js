@@ -13,8 +13,8 @@
     let dataLoaded = false;
     let uiLoaded = false;
 
-    const MAIN_TEMPLATE = 'build/templates/main.html';
-    const NAV_TEMPLATE = 'build/templates/nav.html';
+    const MAIN_TEMPLATE = 'templates/main.html';
+    const NAV_TEMPLATE = 'templates/nav.html';
     const PANEL_ANIMATION_TIME = 200;
 
     function main() {

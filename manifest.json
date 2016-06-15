@@ -12,7 +12,7 @@
     "activeTab"
   ],
   "web_accessible_resources": [
-    "build/templates/*",
+    "templates/*",
     "vendor/*"
   ],
   "content_scripts": [
@@ -21,9 +21,9 @@
       "js" : [
         "vendor/jquery-2.2.3.js",
         "vendor/moment.2.13.0.min.js",
-        "build/tiyo-assistant.js"
+        "tiyo-assistant.js"
       ],
-      "css" : ["vendor/font-awesome.min.css", "build/tiyo-assistant.css"]
+      "css" : ["vendor/font-awesome.min.css", "tiyo-assistant.css"]
     }
   ]
 }
