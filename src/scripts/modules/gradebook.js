@@ -10,6 +10,8 @@
     let uiBuilt = false;
 
     const TABLE_TEMPLATE = `
+      <h6 id='path-title'></h6>
+
       <table class="table table-condensed">
         <thead></thead>
         <tbody></tbody>
@@ -19,6 +21,10 @@
         <button type="button" class="btn btn-secondary btn-sm" id="generate-score-card">
           <i class="fa fa-refresh"></i> Refresh Grades
         </button>
+        <small class='text-muted'>
+          as of
+          <span id='last-scraped'>Never</span>
+        </small>
       </section>
       `;
 
@@ -51,19 +57,48 @@
         } );
     }
 
-    function show( sessionData, $el ) {
-        let gradebook_data;
+    function loadCachedGradebooks() {
+      let gradebooks;
+      try {
+          gradebooks = JSON.parse(
+              localStorage.getItem( 'cachedGradeBookData' )
+          );
 
+      } catch ( e ) {}
+      gradebooks = gradebooks || {};
+      return gradebooks;
+    }
+
+    function loadCachedSession() {
+      let session;
+      try {
+          session = JSON.parse(
+              localStorage.getItem( 'cachedGradeBookDataSession' )
+          );
+      } catch ( e ) {}
+      session = session || { path: null };
+      return session;
+    }
+
+    function show( sessionData, $el ) {
         if ( uiBuilt ) {
             return;
         }
 
-        try {
-            gradebook_data = JSON.parse(
-                localStorage.getItem( 'cachedGradeBookData' )
-            );
+        let cachedSession = loadCachedSession();
+        console.log(sessionData, cachedSession);
+        if ( sessionData.path === null && cachedSession.path === null ) {
+            // Provide feedback to the user that we can't handle this.
+            $el.text( 'Have you visited a path recently, we don\'t know what gradebook you want to see, go to a path you own and try again?!' );
+            return;
+        } else if ( sessionData.path === null && cachedSession.path !== null  ) {
+          sessionData = cachedSession;
+        } else {
+          localStorage.setItem( 'cachedGradeBookDataSession', JSON.stringify(sessionData) );
+        }
 
-        } catch ( e ) {}
+        let gradebooks = loadCachedGradebooks();
+        let gradebook_data = gradebooks[ sessionData.path.id ];
 
         resetUI( sessionData, $el );
 
@@ -72,8 +107,7 @@
                 buildUI(
                     sessionData,
                     $el,
-                    gradebook_data.students,
-                    gradebook_data.assignments
+                    gradebook_data
                 );
             } catch ( e ) {
                 localStorage.removeItem( 'cachedGradeBookData' );
@@ -89,17 +123,12 @@
     function getGradebook( sessionData, $el ) {
         console.info( "DDOSsing  TIYO" );
 
-        if ( sessionData.group === null && sessionData.path === null ) {
-            // Provide feedback to the user that we can't handle this.
-            return;
-        }
-
         $( '#generate-score-card' ).text( "Processing" ).attr( "disabled", true );
 
         try {
-            scrape( sessionData.group.id, sessionData.path.id, function( students, assignments ) {
+            scrape( sessionData, function( gradebook ) {
                 resetUI( sessionData, $el );
-                buildUI( sessionData, $el, students, assignments );
+                buildUI( sessionData, $el, gradebook );
             } );
         } catch ( e ) {
             console.warn( "it blewup", e );
@@ -119,7 +148,9 @@
         } );
     }
 
-    function buildUI( sessionData, $el, students, assignments ) {
+    function buildUI( sessionData, $el, gradebook ) {
+      let students = gradebook.students;
+      let assignments = gradebook.assignments;
         const $table = $el.find( 'table' );
         $table.find( 'thead' )
             .append( buildAssignmentsHeader( assignments ) );
@@ -134,6 +165,13 @@
             let student = students[ studentId ];
             $table.append( buildStudentRow( student, assignments ) );
         }
+
+        $el.find('#path-title').html(
+          `<a href='/admin/paths/${sessionData.path.id}'>
+          ${gradebook.title}
+          </a>`);
+        $el.find('#last-scraped').text(moment(gradebook.scraped_at).fromNow());
+
     }
 
     function buildAssignmentsHeader( assignments ) {
@@ -179,7 +217,7 @@
                 studentRow.append(
                     `
                   <td class='grade ${gradeClass}' date-tooltip='${assignment.name}' >
-                    <a href='${submission.href}' title='${assignment.name}%' target='blank' >
+                    <a href='${submission.href}' title='${assignment.name}' target='blank' >
                       ${SHORT_GRADE_NAMES[ submission.grade ]}
                     </a>
                   </td>
@@ -219,56 +257,11 @@
         return students;
     }
 
-    function scrape( groupId, pathId, callback ) {
-        var states = [ 'public', 'current' ];
-        var group = id => `https://online.theironyard.com/admin/groups/${ id }`;
-        var path = id => `https://online.theironyard.com/admin/paths/${ id }`;
+    function scrape( sessionData, callback ) {
+        var userURI = id => `https://online.theironyard.com/admin/users/${id}`;
         var slice = c => [].slice.call( c );
         var qs = ( el, s ) => el.querySelector( s );
         var qsa = ( el, s ) => slice( el.querySelectorAll( s ) );
-
-        function scrapeStudentsFromGroup( html ) {
-            let dom = document.createElement( 'html' );
-            dom.innerHTML = html;
-
-            let students = qsa( dom, '#students table tbody tr' ).map( x =>
-                qs( qs( x, 'td' ), 'a' ).href );
-
-            return students;
-        }
-
-        var getGroup = id => new Promise( ( res ) => {
-            $.get( group( id ) ).then( html => {
-                res( scrapeStudentsFromGroup( html ) );
-            } );
-        } );
-
-        var getPath = id => new Promise( ( res ) => {
-            $.get( path( id ) ).then( html => {
-                var dom = document.createElement( 'html' );
-                dom.innerHTML = html;
-
-                var titles = [];
-
-                var promises = qsa( dom, '.assignment a.text-body' ).map( x => $
-                    .get(
-                        x.href ).then( html => {
-                        var aPage = document.createElement( 'html' );
-                        aPage.innerHTML = html;
-
-                        var o = qs( aPage,
-                            "#state option[selected='selected']" );
-                        if ( o && states.indexOf( o.value ) !== -1 ) {
-                            titles.push( x.innerText );
-                        }
-                    } ) );
-
-                $.when( ...promises ).then( () => res( titles ) );
-            } );
-        } );
-
-        var studentUrls = getGroup( groupId );
-        var assignmentTitles = getPath( pathId );
 
         function scrapeStudentPage( students, assignments, url, html ) {
             var studentPage = document.createElement( 'html' );
@@ -317,19 +310,22 @@
 
                 if ( !IGNORED_GRADES.includes( submission.grade ) ) {
                     submission.assignment = assignment;
-                    students[ studentId ].submissions[ assignment.id ] = submission;
+                    let existingSubmission = students[ studentId ].submissions[ assignment.id ];
+                    if ( !( existingSubmission && existingSubmission.submitted_at > submission.submitted_at ) ) {
+                      students[ studentId ].submissions[ assignment.id ] = submission;
+                    }
                 }
 
             } );
 
         }
 
-        Promise.all( [ studentUrls, assignmentTitles ] ).then( ( [ s ] ) => {
+        Promise.all( [ sessionData.students ] ).then( ( [ s ] ) => {
             let students = {};
             let assignments = [];
 
-            Promise.all( s.map( url => new Promise( ( res ) => {
-                $.get( url ).then( html => res( scrapeStudentPage( students, assignments, url, html ) ) );
+            Promise.all( s.map( s => new Promise( ( res ) => {
+                $.get( userURI(s.id) ).then( html => res( scrapeStudentPage( students, assignments, userURI(s.id), html ) ) );
             } ) ) ).then( () => {
 
                 assignments.sort( function( a, b ) {
@@ -337,14 +333,19 @@
                 } );
 
                 students = calculateGrades( students, assignments );
-
-                const gradebook_data = {
+                const gradebook = {
+                    id: sessionData.path.id,
+                    title: sessionData.path.title,
                     students: students,
-                    assignments: assignments
+                    assignments: assignments,
+                    scraped_at:  moment()
                 };
+                let gradebooks = loadCachedGradebooks();
 
-                localStorage.setItem( 'cachedGradeBookData', JSON.stringify( gradebook_data ) );
-                callback( gradebook_data.students, gradebook_data.assignments );
+                gradebooks[sessionData.path.id] = gradebook;
+
+                localStorage.setItem( 'cachedGradeBookData', JSON.stringify( gradebooks ) );
+                callback( gradebook );
             } );
         } );
     }
