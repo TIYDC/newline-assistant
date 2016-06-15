@@ -28,8 +28,10 @@
 
         if (pageData.path && pageData.path.id) {
             addNotesIcons();
+        } else if (pageData.content && pageData.content.id && pageData.content.isEdit) {
+            addEditContentNotesUI();
         } else if (pageData.content && pageData.content.id) {
-            addContentNotesUI();
+            addViewContentNotesUI();
         }
     }
 
@@ -83,11 +85,36 @@
             .show();
     }
 
-    function addContentNotesUI() {
+    function addEditContentNotesUI() {
         let notes = notesData[pageData.content.id] || '';
         $.get(chrome.extension.getURL(NOTES_TEMPLATE)).then(function(html) {
             $ui.append(html)
                 .find('form')
+                    .attr('data-id', pageData.content.id)
+                    .find('.tiyo-assistant-note-title')
+                        .text(pageData.content.title)
+                        .end()
+                    .find('textarea')
+                        .val(notes)
+                        .end()
+                    .find('.tiyo-assistant-note-cancel')
+                        .remove()
+                        .end()
+                    .show()
+                    .submit(saveNotes);
+        });
+    }
+
+    function addViewContentNotesUI() {
+        let notes = notesData[pageData.content.id] || '';
+        $.get(chrome.extension.getURL(NOTES_TEMPLATE)).then(function(html) {
+            $('.l-content .py2')
+                .after(
+                    $(`<section class='tiyo-assistant-notes-container'></section>`)
+                        .append(html)
+                )
+                .next('.tiyo-assistant-notes-container')
+                    .find('form')
                     .attr('data-id', pageData.content.id)
                     .find('.tiyo-assistant-note-title')
                         .text(pageData.content.title)
