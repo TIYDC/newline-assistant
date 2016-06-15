@@ -1,0 +1,56 @@
+
+i.tiyo-assistant-note {
+    display: inline-block;
+    float: right;
+    padding-top: 3px;
+    margin-right: 0.8em;
+    cursor: pointer;
+}
+i.tiyo-assistant-note:hover {
+    color: #999;
+}
+
+.tiyo-assistant-notes-container {
+    max-width: 48rem;
+    margin: 0 auto;
+    margin-top: 1em;
+    border-top: 1px solid #999;
+    border-bottom: 1px solid #999;
+
+    h4 {
+        text-align: right;
+    }
+}
+
+form.tiyo-assistant-note {
+    background-color: #fff;
+    padding: 1em;
+
+    &::after {
+        content: "";
+        display: table;
+        clear: both;
+    }
+
+    &.tiyo-assistant-modal {
+        display: none;
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 40%;
+    }
+
+    textarea {
+        width: 100%;
+        height: 6em;
+    }
+}
+
+.tiyo-assistant-note-save {
+    float: right;
+}
+
+.tiyo-assistant-notes-import {
+    float: right;
+    width: 50%;
+}
