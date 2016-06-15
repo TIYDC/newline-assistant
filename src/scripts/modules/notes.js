@@ -29,7 +29,7 @@
 
         if (pageData.path && pageData.path.id) {
             addNotesIcons();
-        } else if (pageData.content && pageData.content.id && pageData.content.isEdit) {
+        } else if (pageData.content && pageData.content.id && pageData.content.isAdmin) {
             addEditContentNotesUI();
         } else if (pageData.content && pageData.content.id) {
             addViewContentNotesUI();

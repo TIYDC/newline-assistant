@@ -97,31 +97,35 @@
 
         data.user = getUser();
 
-        if (pathname.length === 4 && pathname[2] === 'paths') {
+        // Admin view of path
+        if (/\/admin\/paths\/[0-9]+/.test(window.location.pathname)) {
             data.path = {
                 id: Number(pathname[3]),
                 title: $('.content .breadcrumb li:eq(1)').text()
             };
-        } else if (pathname.length === 4 && pathname[1] === 'paths') {
-            data.path = {
-                id: Number(pathname[2]),
-                title: $('.m-pathheader-info-title').text()
-            };
         }
 
-        if (pathname.length > 3 && (pathname[2] === 'lessons' || pathname[2] === 'assignments')) {
+        // Admin view of content piece
+        if (/\/admin\/(lessons|assignmnents)\/[0-9]+/.test(window.location.pathname)) {
             data.content = {
                 id: Number(pathname[3]),
                 title: $('.content .breadcrumb li:eq(3)').text(),
                 type: pathname[2],
-                isEdit: true
+                isAdmin: true
             };
-        } else if (/paths\/[0-9]+\/units\/[0-9]+\/[^\/]+\/[0-9]+/.test(window.location.pathname)) {
+        }
+
+        // Student view of content piece
+        if (/\/paths\/[0-9]+\/units\/[0-9]+\/[^\/]+\/[0-9]+/.test(window.location.pathname)) {
+            data.path = {
+                id: Number(pathname[2]),
+                title: $('.m-pathheader-info-title').text()
+            };
             data.content = {
                 id: Number(pathname[6]),
                 title: $('.m-lessonheader-title').text(),
                 type: pathname[5],
-                isEdit: false
+                isAdmin: false
             };
         }
 
