@@ -34,6 +34,8 @@
     }
 
     function addNotesIcons() {
+        $ui.append(`<p>Please use the note icons next to each content line in your units!</p>`);
+
         $.get(chrome.extension.getURL(NOTES_TEMPLATE)).then(function(html) {
             let notesModal = $(html);
             notesModal.addClass('tiyo-assistant-modal');
