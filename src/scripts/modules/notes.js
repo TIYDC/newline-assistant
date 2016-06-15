@@ -161,20 +161,11 @@
 
     function addViewContentNotesUI() {
         let notes = notesData[pageData.content.id] || '';
-        $.get(chrome.extension.getURL(NOTES_TEMPLATE)).then(function(html) {
-            let $form = $('.l-content .py2')
-                .after(
-                    $(`<section class='tiyo-assistant-notes-container'></section>`)
-                        .append(html)
-                )
-                .next('.tiyo-assistant-notes-container')
-                    .find('form');
 
-            setupForm($form, pageData.content, notes)
-                .submit(saveNotes)
-                .find('.tiyo-assistant-note-cancel')
-                    .remove();
-        });
+        $(`<section class='tiyo-assistant-notes-container'></section>`)
+            .append('<h4>Instructor Notes</h4>')
+            .append(notes.replace(/\n/g, '<br>'))
+            .appendTo('.l-content .py2');
     }
 
     function saveNotes(e) {
