@@ -2,7 +2,7 @@
     'use strict';
 
     const NOTES_KEY = 'tiyo-notes';
-    const TEMPLATE = 'build/templates/notes.html';
+    const NOTES_TEMPLATE = 'build/templates/notes.html';
 
     let $ui = null;
     let pageData = {};
@@ -28,12 +28,15 @@
 
         if (pageData.path && pageData.path.id) {
             addNotesIcons();
+        } else if (pageData.content && pageData.content.id) {
+            addContentNotesUI();
         }
     }
 
     function addNotesIcons() {
-        $.get(chrome.extension.getURL(TEMPLATE)).then(function(html) {
+        $.get(chrome.extension.getURL(NOTES_TEMPLATE)).then(function(html) {
             let notesModal = $(html);
+            notesModal.addClass('tiyo-assistant-modal');
             $('body').append(notesModal);
             $('.path-tree-states').after($(`<i class='fa fa-sticky-note-o tiyo-assistant-note'></i>`));
 
@@ -41,7 +44,10 @@
                 showNotesModal($(this).parents('.lesson, .assignment'), notesModal);
             });
 
-            notesModal.submit(saveNotes);
+            notesModal.submit(function(e) {
+                saveNotes.call(this, e);
+                $(this).hide();
+            });
             notesModal.find('.tiyo-assistant-note-cancel').click(function() {
                 notesModal.hide();
             });
@@ -75,6 +81,26 @@
             .show();
     }
 
+    function addContentNotesUI() {
+        let notes = notesData[pageData.content.id] || '';
+        $.get(chrome.extension.getURL(NOTES_TEMPLATE)).then(function(html) {
+            $ui.append(html)
+                .find('form')
+                    .attr('data-id', pageData.content.id)
+                    .find('.tiyo-assistant-note-title')
+                        .text(pageData.content.title)
+                        .end()
+                    .find('textarea')
+                        .val(notes)
+                        .end()
+                    .find('.tiyo-assistant-note-cancel')
+                        .remove()
+                        .end()
+                    .show()
+                    .submit(saveNotes);
+        });
+    }
+
     function saveNotes(e) {
         e.preventDefault();
 
@@ -92,8 +118,6 @@
 
         notesData[''+id] = notes;
         localStorage.setItem(NOTES_KEY, JSON.stringify(notesData));
-
-        $form.hide();
     }
 
 

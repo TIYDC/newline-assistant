@@ -11,13 +11,22 @@ i.tiyo-assistant-note:hover {
 }
 
 form.tiyo-assistant-note {
-    display: none;
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 40%;
     background-color: #fff;
     padding: 1em;
+
+    &::after {
+        content: "";
+        display: table;
+        clear: both;
+    }
+
+    &.tiyo-assistant-modal {
+        display: none;
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 40%;
+    }
 
     textarea {
         width: 100%;
@@ -27,10 +36,4 @@ form.tiyo-assistant-note {
 
 .tiyo-assistant-note-save {
     float: right;
-
-    &::after {
-        content: "";
-        display: table;
-        clear: both;
-    }
 }
