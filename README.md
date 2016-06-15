@@ -2,7 +2,15 @@
 
 This is a chrome extension to assist with The Iron Yard Online for instructors. Since this is not (yet?) a distributed extension, you will need to clone this repo (or download it) in order to use it.
 
-## To Use It
+* [Using this extension](#using-this-extension)
+  * [Install It](#install-it)
+  * [Gradebook](#gradebook)
+  * [Search](#search)
+  * [Instructor Notes](#instructor-notes)
+* [To Hack On It](#to-hack-on-it)
+* [Authors](#authors)
+
+## Using this extension
 
 ### Install It
 
