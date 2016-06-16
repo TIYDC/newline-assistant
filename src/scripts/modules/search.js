@@ -56,13 +56,13 @@
     }
 
     function doSearch(query, indexData) {
-        $ui.find('.tiyo-assistant-notice').text('');
         $('.tiyo-assistant-search-results li').remove();
 
         if (!query) { return; }
 
         if (!indexData || !indexData[pageData.path.id]) {
-            return $ui.find('.tiyo-assistant-notice').text('There is no indexfor this path, please build it!');
+            tiy.showMessage('There is no index for this path, please build it!', { type: 'info' });
+            return;
         }
 
         console.info('searching path %d for %s', pageData.path.id, query);
@@ -100,7 +100,7 @@
         let resultIDs = Object.keys(results);
 
         if (!resultIDs.length) {
-            $ui.find('.tiyo-assistant-notice').text('Looks like there were no results!');
+            tiy.showMessage('Looks like there were no results!', { type: 'info' });
             return;
         }
 
@@ -124,7 +124,7 @@
 
     function buildIndex(indexData) {
         $ui.find('.tiyo-assistant-search-refresh').attr('disabled', 'disabled');
-        $ui.find('.tiyo-assistant-notice').text('Recreating... this could take a while.');
+        tiy.showMessage('Creating new index... this could take a while.', { type: 'info' });
 
         let pathIndex = Object.create(null);
         pathIndex.__createTime = Date.now();
@@ -164,12 +164,12 @@
                 addIndexAge(indexData);
 
                 $ui.find('.tiyo-assistant-search-refresh').attr('disabled', '');
-                $ui.find('.tiyo-assistant-notice').text('');
+                tiy.showMessage('New index built!', { type: 'success' });
             })
             .catch(function(err) {
                 console.warn('Problem getting content index', err);
                 $ui.find('.tiyo-assistant-search-refresh').attr('disabled', false);
-                $ui.find('.tiyo-assistant-notice').text('There was a problem building the index, feel free to try again!');
+                tiy.showMessage('There was a problem building the index, please try again (TIYO throws 500 errors sometimes)!');
             });
     }
 
