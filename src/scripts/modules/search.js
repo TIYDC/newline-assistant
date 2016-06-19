@@ -6,10 +6,10 @@
     const TEMPLATE = 'templates/search.html';
     const SCRAPE_BASE = 'https://online.theironyard.com';
     const FILLERS = /\b(an|and|are(n\'t)?|as|at|be|but|by|do(es)?(n\'t)?|for|from|if|in|into|is(n\'t)?|it\'?s?|no|none|not|of|on|or|such|that|the|theirs?|then|there(\'s)?|these|they|this|to|us|was|we|will|with|won\'t|you\'?r?e?)\b/g;
+    const TAG_WEIGHT = 5;
 
     let $ui = null;
     let tagData = {};
-    let tagsByContent = {};
     let pageData = {};
 
     tiy.loadModule({
@@ -40,7 +40,6 @@
                     });
                 });
 
-            reverseTagIndex();
             addTagIcons();
 
         } else {
@@ -50,22 +49,21 @@
         }
     }
 
-    function reverseTagIndex() {
-        Object.keys(tagData).forEach(function(tag) {
-            tagData[tag].forEach(function(id) {
-                if (!tagsByContent[id]) {
-                    tagsByContent[id] = [];
-                }
-                tagsByContent[id].push(tag);
-            });
-        });
-    }
-
     function getTagLabel(tag) {
         return `<span class='tiyo-assistant-tag label label-info'>${tag}</span>`;
     }
 
     function addTagIcons() {
+        let tagsByContent = {};
+        Object.keys(tagData).forEach(function(tag) {
+            tagData[tag].forEach(function(content) {
+                if (!tagsByContent[content.id]) {
+                    tagsByContent[content.id] = [];
+                }
+                tagsByContent[content.id].push(tag);
+            });
+        });
+
         $('.path-tree-lessons .text-body').each(function() {
             let id = $(this).attr('href').match(/\/(\d+)$/);
             id = id && id[1];
@@ -104,21 +102,32 @@
             });
     }
 
-    function getIDFromNode(contentNode) {
-        let id = contentNode.data('id').match(/^gid:\/\/online\/[^\/]+\/([0-9]+)$/);
-        return id && id[1];
+    function getContentFromNode(contentNode) {
+        let link = contentNode.find('.text-body');
+        if (!link.length) { return; }
+        let name = link.text();
+        let href = link.attr('href').match(/(lessons|assigments)\/(\d+)/);
+        let unit = Number(contentNode.parents('.path-unit-container').attr('id').substr(5));
+
+        return {
+            u: unit,
+            id: Number(href[2]),
+            n: name,
+            w: TAG_WEIGHT,
+            t: (href[1] === 'lessons') ? 'l' : 'a'
+        };
     }
 
     function removeTag(contentNode, tag) {
-        let id = getIDFromNode(contentNode);
-        if (!id) {
+        let content = getContentFromNode(contentNode);
+        if (!content) {
             return console.warn('Content node is not a lesson or assignment.', contentNode);
         }
 
         let taggedContent = tagData[tag] || [];
-        let index = taggedContent.indexOf(id);
-        if (index > -1) {
-            taggedContent.splice(index, 1);
+        let existingEntry = taggedContent.find(function(c) { return c.id === content.id; });
+        if (existingEntry) {
+            taggedContent.splice(taggedContent.indexOf(existingEntry), 1);
             tagData[tag] = taggedContent;
             localStorage.setItem(TAG_KEY, JSON.stringify(tagData));
             // This could match multiple tags (like "select" within "selectors")
@@ -140,14 +149,15 @@
             });
         }
 
-        let id = getIDFromNode(contentNode);
-        if (!id) {
+        let content = getContentFromNode(contentNode);
+        if (!content) {
             return console.warn('Content node is not a lesson or assignment.', contentNode);
         }
 
         let taggedContent = tagData[tag] || [];
-        if (!taggedContent.includes(id)) {
-            taggedContent.push(id);
+        let existingEntry = taggedContent.find(function(c) { return c.id === content.id; });
+        if (!existingEntry) {
+            taggedContent.push(content);
             tagData[tag] = taggedContent;
             localStorage.setItem(TAG_KEY, JSON.stringify(tagData));
             contentNode.find('.text-body').after(getTagLabel(tag));
