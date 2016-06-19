@@ -91,7 +91,7 @@
             $(this).after(tagItems);
         });
 
-        $('.path-tree-states').after($(`<i class='fa fa-tag tiyo-assistant-add-tag'></i>`));
+        $('.path-tree-states').after($(`<i class='fa fa-tag tiyo-assistant-add-tag' title='Add a tag to this content'></i>`));
 
         $('.path-tree')
             .on('click', '.tiyo-assistant-tag', function() {
