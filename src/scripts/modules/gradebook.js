@@ -291,6 +291,7 @@
 
         if (gid) {
           let title = qs( x, "a.text-body" ).innerText;
+          let href = qs( x, "a.text-body" ).getAttribute('href');
           let hidden = qs( x, "#hidden-state, #unit-hidden-state" ).getAttribute("checked");
           let type = gid.split("/")[3]
           let id = gid.split("/")[4]
@@ -299,6 +300,7 @@
             id: Number(id),
             type: type,
             title: title,
+            href: href,
             hidden_state: !!hidden,
             gid: gid,
             first_submission_at: null
