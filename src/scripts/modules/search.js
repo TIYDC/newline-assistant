@@ -6,7 +6,7 @@
     const TEMPLATE = 'templates/search.html';
     const SCRAPE_BASE = 'https://online.theironyard.com';
     const FILLERS = /\b(an|and|are(n\'t)?|as|at|be|but|by|do(es)?(n\'t)?|for|from|if|in|into|is(n\'t)?|it\'?s?|no|none|not|of|on|or|such|that|the|theirs?|then|there(\'s)?|these|they|this|to|us|was|we|will|with|won\'t|you\'?r?e?)\b/g;
-    const TAG_WEIGHT = 5;
+    const TAG_WEIGHT = 10;
 
     let $ui = null;
     let tagData = {};
@@ -37,6 +37,13 @@
                     $ui.find('form').submit(function(e) {
                         e.preventDefault();
                         doSearch($(this).find('[type=text]').val(), indexData);
+                    });
+                    $('.tiyo-assistant-search-results').on('click', '.tiyo-assistant-tag', function() {
+                        $ui.find('form')
+                            .find('input[type=text]')
+                                .val($(this).text())
+                                .end()
+                            .submit();
                     });
                 });
 
@@ -119,7 +126,6 @@
             u: unit,
             id: Number(href[2]),
             p: pageData.path.id,
-            w: TAG_WEIGHT,
             t: (href[1] === 'lessons') ? 'l' : 'a'
         };
     }
@@ -206,7 +212,11 @@
             .map(function(token) {
                 // map to the matched content
                 let matches = index[token] || [];
-                matches = matches.concat(tagData[token] || []);
+                let tagMatches = (tagData[token] || []).map(function(match) {
+                    match.w = TAG_WEIGHT;
+                    return match;
+                });
+                matches = matches.concat(tagMatches);
                 return matches;
             })
             .forEach(function(matches) {
