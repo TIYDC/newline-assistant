@@ -4,12 +4,12 @@
     const INDEX_ITEM = 'tiyo-search-index';
     const TAG_KEY = 'tiyo-search-tags';
     const TEMPLATE = 'templates/search.html';
-    const TAG_TEMPLATE = 'templates/tags.html';
     const SCRAPE_BASE = 'https://online.theironyard.com';
     const FILLERS = /\b(an|and|are(n\'t)?|as|at|be|but|by|do(es)?(n\'t)?|for|from|if|in|into|is(n\'t)?|it\'?s?|no|none|not|of|on|or|such|that|the|theirs?|then|there(\'s)?|these|they|this|to|us|was|we|will|with|won\'t|you\'?r?e?)\b/g;
 
     let $ui = null;
     let tagData = {};
+    let tagsByContent = {};
     let pageData = {};
 
     tiy.loadModule({
@@ -27,8 +27,6 @@
         pageData = data;
 
         if (pageData.path) {
-            addTagIcons();
-
             $.get(chrome.extension.getURL(TEMPLATE))
                 .then(function(html) {
                     $ui.append(html);
@@ -41,11 +39,26 @@
                         doSearch($(this).find('[type=text]').val(), indexData);
                     });
                 });
+
+            reverseTagIndex();
+            addTagIcons();
+
         } else {
             $ui.append(
                 $('<p>').text('Currently search is only supported from a Path page.')
             );
         }
+    }
+
+    function reverseTagIndex() {
+        Object.keys(tagData).forEach(function(tag) {
+            tagData[tag].forEach(function(id) {
+                if (!tagsByContent[id]) {
+                    tagsByContent[id] = [];
+                }
+                tagsByContent[id].push(tag);
+            });
+        });
     }
 
     function getTagLabel(tag) {
@@ -58,7 +71,7 @@
             id = id && id[1];
             if (!id) { return; }
 
-            let tags = tagData[id] || [];
+            let tags = tagsByContent[id] || [];
             let tagItems = tags.map(getTagLabel);
             // Add new tag input
             $(this).after($(`<input type='text' class='tiyo-assistant-new-tag' data-id='${id}'>`));
@@ -102,10 +115,11 @@
             return console.warn('Content node is not a lesson or assignment.', contentNode);
         }
 
-        let tags = tagData[id] || [];
-        let index = tags.indexOf(tag);
+        let taggedContent = tagData[tag] || [];
+        let index = taggedContent.indexOf(id);
         if (index > -1) {
-            tags.splice(index, 1);
+            taggedContent.splice(index, 1);
+            tagData[tag] = taggedContent;
             localStorage.setItem(TAG_KEY, JSON.stringify(tagData));
             // This could match multiple tags (like "select" within "selectors")
             // so we need to find the exact tag match...
@@ -131,10 +145,10 @@
             return console.warn('Content node is not a lesson or assignment.', contentNode);
         }
 
-        let tags = tagData[id] || [];
-        if (!tags.includes(tag)) {
-            tags.push(tag);
-            tagData[id] = tags;
+        let taggedContent = tagData[tag] || [];
+        if (!taggedContent.includes(id)) {
+            taggedContent.push(id);
+            tagData[tag] = taggedContent;
             localStorage.setItem(TAG_KEY, JSON.stringify(tagData));
             contentNode.find('.text-body').after(getTagLabel(tag));
         }
