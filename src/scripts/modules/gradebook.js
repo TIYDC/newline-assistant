@@ -263,7 +263,7 @@
     function getPathContent(path) {
       const pathURI = id => `https://online.theironyard.com/admin/paths/${ id }`;
 
-      return new Promise( ( res ) => {
+      return new Promise( ( res, rej ) => {
         if (/\/admin\/paths\/[0-9]+/.test(window.location.pathname)) {
           path.content = scrapePathContent(document)
           res(path);
@@ -273,7 +273,7 @@
             dom.innerHTML = html;
             path.content = scrapePathContent(dom)
             res( path );
-          } );
+          } ).fail( err => rej(err));
         }
       } );
     }
