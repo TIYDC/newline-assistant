@@ -58,8 +58,7 @@
             id = id && id[1];
             if (!id) { return; }
 
-            // let tags = tagData[id] || [];
-            let tags = ['foo', 'responsive'];
+            let tags = tagData[id] || [];
             let tagItems = tags.map(getTagLabel);
             // Add new tag input
             $(this).after($(`<input type='text' class='tiyo-assistant-new-tag' data-id='${id}'>`));
@@ -67,31 +66,78 @@
             $(this).after(tagItems);
         });
 
-        $('.path-tree').on('click', '.tiyo-assistant-tag', function() {
-            removeTag($(this).parents('.lesson, .assignment'), $(this).text());
-        });
-
         $('.path-tree-states').after($(`<i class='fa fa-tag tiyo-assistant-add-tag'></i>`));
-        $('.path-tree').on('click', '.tiyo-assistant-add-tag', function() {
-            $(this).parent().find('input').show()[0].focus();
-        });
-        $('.path-tree').on('blur', '.tiyo-assistant-new-tag', function() {
-            $(this).hide();
-        });
-        $('.path-tree').on('keypress', '.tiyo-assistant-new-tag', function(e) {
-            if (e.keyCode === 13) {
-                addTag($(this).parents('.lesson, .assignment'), $(this).val());
-                $(this).val('').hide();
-            }
-        });
+
+        $('.path-tree')
+            .on('click', '.tiyo-assistant-tag', function() {
+                removeTag($(this).parents('.lesson, .assignment'), $(this).text());
+            })
+            .on('click', '.tiyo-assistant-add-tag', function() {
+                $(this).parent().find('input').show()[0].focus();
+            })
+            .on('blur', '.tiyo-assistant-new-tag', function() {
+                $(this).hide();
+            })
+            .on('keypress', '.tiyo-assistant-new-tag', function(e) {
+                if (e.keyCode === 13) {
+                    addTag($(this).parents('.lesson, .assignment'), $(this).val());
+                    $(this).val('').hide();
+                }
+            })
+            .on('keyup', '.tiyo-assistant-new-tag', function(e) {
+                if (e.keyCode === 27) {
+                    $(this).val('').hide();
+                }
+            });
+    }
+
+    function getIDFromNode(contentNode) {
+        let id = contentNode.data('id').match(/^gid:\/\/online\/[^\/]+\/([0-9]+)$/);
+        return id && id[1];
     }
 
     function removeTag(contentNode, tag) {
-        console.log('removing tag', contentNode, tag);
+        let id = getIDFromNode(contentNode);
+        if (!id) {
+            return console.warn('Content node is not a lesson or assignment.', contentNode);
+        }
+
+        let tags = tagData[id] || [];
+        let index = tags.indexOf(tag);
+        if (index > -1) {
+            tags.splice(index, 1);
+            localStorage.setItem(TAG_KEY, JSON.stringify(tagData));
+            // This could match multiple tags (like "select" within "selectors")
+            // so we need to find the exact tag match...
+            contentNode.find(`.tiyo-assistant-tag:contains("${tag}")`).each(function() {
+                if ($(this).text() === tag) {
+                    $(this).remove();
+                }
+            });
+        }
     }
 
     function addTag(contentNode, tag) {
-        console.log('adding tag', contentNode, tag);
+        tag = tag.trim();
+
+        if (tag.indexOf(',') > -1) {
+            return tag.split(/\,/).forEach(function(splitTag) {
+                addTag(contentNode, splitTag);
+            });
+        }
+
+        let id = getIDFromNode(contentNode);
+        if (!id) {
+            return console.warn('Content node is not a lesson or assignment.', contentNode);
+        }
+
+        let tags = tagData[id] || [];
+        if (!tags.includes(tag)) {
+            tags.push(tag);
+            tagData[id] = tags;
+            localStorage.setItem(TAG_KEY, JSON.stringify(tagData));
+            contentNode.find('.text-body').after(getTagLabel(tag));
+        }
     }
 
     function addIndexAge(indexData) {
