@@ -40,8 +40,10 @@ form.tiyo-assistant-search [type=text] {
 
     &:hover {
         background-color: #508d9f;
-        text-decoration: line-through;
     }
+}
+.path-tree .tiyo-assistant-tag:hover {
+    text-decoration: line-through;
 }
 
 i.tiyo-assistant-add-tag {

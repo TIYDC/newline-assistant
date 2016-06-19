@@ -49,11 +49,11 @@
         }
     }
 
-    function getTagLabel(tag) {
-        return `<span class='tiyo-assistant-tag label label-info'>${tag}</span>`;
+    function getTagLabel(tag, title = '') {
+        return `<span class='tiyo-assistant-tag label label-info' title='${title}'>${tag}</span>`;
     }
 
-    function addTagIcons() {
+    function reverseTagData() {
         let tagsByContent = {};
         Object.keys(tagData).forEach(function(tag) {
             tagData[tag].forEach(function(content) {
@@ -63,6 +63,11 @@
                 tagsByContent[content.id].push(tag);
             });
         });
+        return tagsByContent;
+    }
+
+    function addTagIcons() {
+        let tagsByContent = reverseTagData();
 
         $('.path-tree-lessons .text-body').each(function() {
             let id = $(this).attr('href').match(/\/(\d+)$/);
@@ -70,7 +75,9 @@
             if (!id) { return; }
 
             let tags = tagsByContent[id] || [];
-            let tagItems = tags.map(getTagLabel);
+            let tagItems = tags.map(function(tag) {
+                return getTagLabel(tag, 'Click to remove this tag');
+            });
             // Add new tag input
             $(this).after($(`<input type='text' class='tiyo-assistant-new-tag' data-id='${id}'>`));
             // Add existing tags...
@@ -105,14 +112,13 @@
     function getContentFromNode(contentNode) {
         let link = contentNode.find('.text-body');
         if (!link.length) { return; }
-        let name = link.text();
         let href = link.attr('href').match(/(lessons|assigments)\/(\d+)/);
         let unit = Number(contentNode.parents('.path-unit-container').attr('id').substr(5));
 
         return {
             u: unit,
             id: Number(href[2]),
-            n: name,
+            p: pageData.path.id,
             w: TAG_WEIGHT,
             t: (href[1] === 'lessons') ? 'l' : 'a'
         };
@@ -160,7 +166,7 @@
             taggedContent.push(content);
             tagData[tag] = taggedContent;
             localStorage.setItem(TAG_KEY, JSON.stringify(tagData));
-            contentNode.find('.text-body').after(getTagLabel(tag));
+            contentNode.find('.text-body').after(getTagLabel(tag, 'Click to remove this tag'));
         }
     }
 
@@ -199,11 +205,16 @@
             })
             .map(function(token) {
                 // map to the matched content
-                return index[token] || [];
+                let matches = index[token] || [];
+                matches = matches.concat(tagData[token] || []);
+                return matches;
             })
             .forEach(function(matches) {
                 // build total weight for single content piece
                 matches.forEach(function(match) {
+                    if (match.p && match.p !== pageData.path.id) {
+                        return;
+                    }
                     if (!results[match.id]) {
                         results[match.id] = {
                             id: match.id,
@@ -234,10 +245,18 @@
 
         console.log('search results built', sortedResults);
 
+        let tagsByContent = reverseTagData();
+
         let resultItems = [];
         resultItems = sortedResults.map(function(result) {
+            let tags = tagsByContent[result.id] || [];
+            let tagItems = tags.map(function(tag) {
+                return getTagLabel(tag, 'Click to search for this tag');
+            });
+
             return `<li class='path-tree-level ${result.type.toLowerCase()}'>
                 <a href='/admin/${result.type.toLowerCase()}s/${result.id}' class='text-body'>${result.title}</a>
+                ${tagItems.join('')}
             </li>`;
         });
         $('.tiyo-assistant-search-results ul').append(resultItems.join(''));
