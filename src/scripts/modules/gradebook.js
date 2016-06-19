@@ -285,7 +285,7 @@
         units: []
       };
 
-      qsa( dom, '.path-tree-level' ).map( x => {
+      qsa( dom, '.path-tree-level' ).forEach( x => {
         // Anything that has a GID has been persisted by Rails.
         let gid = x.getAttribute('data-id');
 
