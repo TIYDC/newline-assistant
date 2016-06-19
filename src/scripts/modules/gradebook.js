@@ -390,7 +390,7 @@
                       return new Date( b.first_submission_at ) - new Date( a.first_submission_at );
                   } );
 
-                  students = calculateGrades( students, assignments );
+                  students = calculateGrades( students, submittedAssingments );
                   const gradebook = {
                       id: sessionData.path.id,
                       title: sessionData.path.title,
