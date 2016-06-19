@@ -2,11 +2,14 @@
     'use strict';
 
     const INDEX_ITEM = 'tiyo-search-index';
+    const TAG_KEY = 'tiyo-search-tags';
     const TEMPLATE = 'templates/search.html';
+    const TAG_TEMPLATE = 'templates/tags.html';
     const SCRAPE_BASE = 'https://online.theironyard.com';
     const FILLERS = /\b(an|and|are(n\'t)?|as|at|be|but|by|do(es)?(n\'t)?|for|from|if|in|into|is(n\'t)?|it\'?s?|no|none|not|of|on|or|such|that|the|theirs?|then|there(\'s)?|these|they|this|to|us|was|we|will|with|won\'t|you\'?r?e?)\b/g;
 
     let $ui = null;
+    let tagData = {};
     let pageData = {};
 
     tiy.loadModule({
@@ -18,12 +21,14 @@
     function main(data, elem) {
         let indexData = {};
         try { indexData = JSON.parse(localStorage.getItem(INDEX_ITEM) || '{}'); } catch(e) { /* let this go */ }
-        console.info('loading search module with indexData', indexData);
+        try { tagData = JSON.parse(localStorage.getItem(TAG_KEY) || '{}'); } catch(e) { /* let this go */ }
 
         $ui = $(elem);
         pageData = data;
 
         if (pageData.path) {
+            addTagIcons();
+
             $.get(chrome.extension.getURL(TEMPLATE))
                 .then(function(html) {
                     $ui.append(html);
@@ -41,6 +46,52 @@
                 $('<p>').text('Currently search is only supported from a Path page.')
             );
         }
+    }
+
+    function getTagLabel(tag) {
+        return `<span class='tiyo-assistant-tag label label-info'>${tag}</span>`;
+    }
+
+    function addTagIcons() {
+        $('.path-tree-lessons .text-body').each(function() {
+            let id = $(this).attr('href').match(/\/(\d+)$/);
+            id = id && id[1];
+            if (!id) { return; }
+
+            // let tags = tagData[id] || [];
+            let tags = ['foo', 'responsive'];
+            let tagItems = tags.map(getTagLabel);
+            // Add new tag input
+            $(this).after($(`<input type='text' class='tiyo-assistant-new-tag' data-id='${id}'>`));
+            // Add existing tags...
+            $(this).after(tagItems);
+        });
+
+        $('.path-tree').on('click', '.tiyo-assistant-tag', function() {
+            removeTag($(this).parents('.lesson, .assignment'), $(this).text());
+        });
+
+        $('.path-tree-states').after($(`<i class='fa fa-tag tiyo-assistant-add-tag'></i>`));
+        $('.path-tree').on('click', '.tiyo-assistant-add-tag', function() {
+            $(this).parent().find('input').show()[0].focus();
+        });
+        $('.path-tree').on('blur', '.tiyo-assistant-new-tag', function() {
+            $(this).hide();
+        });
+        $('.path-tree').on('keypress', '.tiyo-assistant-new-tag', function(e) {
+            if (e.keyCode === 13) {
+                addTag($(this).parents('.lesson, .assignment'), $(this).val());
+                $(this).val('').hide();
+            }
+        });
+    }
+
+    function removeTag(contentNode, tag) {
+        console.log('removing tag', contentNode, tag);
+    }
+
+    function addTag(contentNode, tag) {
+        console.log('adding tag', contentNode, tag);
     }
 
     function addIndexAge(indexData) {
