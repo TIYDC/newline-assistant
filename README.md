@@ -14,7 +14,9 @@ This is a chrome extension to assist with The Iron Yard Online for instructors. 
 
 ### Install It
 
-Download the `crx` file from one of the [releases on GitHub](https://github.com/TIYDC/tiyo-assistant/releases), then go to [chrome://extensions](chrome://extensions) in your browser and drag the `tiyo-assistant-x.y.z.crx` file you downloaded onto that page. That's it!
+Head to the (unlisted) entry in the [Chrome Web Store](https://chrome.google.com/webstore/detail/tiyo-assistant/fnhanbdccpjnnoohoppkeejljjljihcc?authuser=0) add click the "Add to Chrome" button!
+
+Once installed, just head to [TIYO](https://online.theironyard.com), you'll have some new icons in the top-right corner that will let you access the features below...
 
 ### Gradebook
 
@@ -65,7 +67,7 @@ Now create your branch and hack away. When you're ready to test the extension, [
 
 ### Merging Back in and Releasing
 
-We are happy to accept PRs and will cut releases as necessary. The "release" process is simply updating the manifest/package.json and regenerating the `crx` file from the `build/` directory. The `crx` file itself is created by using the "Pack Extension" button within the chrome extensions settings page. And don't forget the `pem` file so that users can update their extension vs having to remove it first! (Note that this file is shared among authors to keep it out of the repo.)
+We are happy to accept PRs and will cut releases as necessary. The "release" process is simply creating a zip file from the `/build` directory and updating the published chrome extension (which only @jakerella can do currently). We also will add a "release" in GitHub each time.
 
 ## Authors
 
