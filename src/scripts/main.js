@@ -105,7 +105,8 @@
         if (/\/admin\/paths\/[0-9]+/.test(window.location.pathname)) {
             data.path = {
                 id: Number(pathname[3]),
-                title: $('.content .breadcrumb li:eq(1)').text()
+                title: $('.content .breadcrumb li:eq(1)').text(),
+                onPage: true
             };
         }
 
@@ -123,7 +124,8 @@
         if (/\/paths\/[0-9]+\/units\/[0-9]+\/[^\/]+\/[0-9]+/.test(window.location.pathname)) {
             data.path = {
                 id: Number(pathname[2]),
-                title: $('.m-pathheader-info-title').text()
+                title: $('.m-pathheader-info-title').text(),
+                onPage: false
             };
             data.content = {
                 id: Number(pathname[6]),
