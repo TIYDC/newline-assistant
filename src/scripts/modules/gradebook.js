@@ -48,6 +48,9 @@
     ];
 
     const PARSING_TIME_FORMAT = "MMM DD, YYYY hh:mm A";
+    const slice = c => [].slice.call( c );
+    const qs = ( el, s ) => el.querySelector( s );
+    const qsa = ( el, s ) => slice( el.querySelectorAll( s ) );
 
     // Behavior ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
@@ -121,7 +124,7 @@
 
 
     function getGradebook( sessionData, $el ) {
-        console.info( "DDOSsing  TIYO" );
+        console.info( "DDOSsing  TIYO for path: ", sessionData.path.id );
 
         $( '#generate-score-card' ).text( "Processing" ).attr( "disabled", true );
 
@@ -216,8 +219,8 @@
                 let gradeClass = SHORT_GRADE_NAMES[ submission.grade ].toLowerCase();
                 studentRow.append(
                     `
-                  <td class='grade ${gradeClass}' date-tooltip='${assignment.name}' >
-                    <a href='${submission.href}' title='${assignment.name}' target='blank' >
+                  <td class='grade ${gradeClass}' date-tooltip='${assignment.title}' >
+                    <a href='${submission.href}' title='${assignment.title}' target='blank' >
                       ${SHORT_GRADE_NAMES[ submission.grade ]}
                     </a>
                   </td>
@@ -257,17 +260,73 @@
         return students;
     }
 
+    function getPathContent(path) {
+      const pathURI = id => `https://online.theironyard.com/admin/paths/${ id }`;
+
+      return new Promise( ( res, rej ) => {
+        if (/\/admin\/paths\/[0-9]+/.test(window.location.pathname)) {
+          path.content = scrapePathContent(document)
+          res(path);
+        } else {
+          $.get( pathURI( path.id ) ).then( html => {
+            var dom = document.createElement( 'html' );
+            dom.innerHTML = html;
+            path.content = scrapePathContent(dom)
+            res( path );
+          } ).fail( err => rej(err));
+        }
+      } );
+    }
+
+    function scrapePathContent(dom) {
+      let allContent = {
+        assignments: [],
+        lessons: [],
+        units: []
+      };
+
+      qsa( dom, '.path-tree-level' ).forEach( x => {
+        // Anything that has a GID has been persisted by Rails.
+        let gid = x.getAttribute('data-id');
+
+        if (gid) {
+          let title = qs( x, "a.text-body" ).innerText;
+          let href = qs( x, "a.text-body" ).getAttribute('href');
+          let hidden = qs( x, "#hidden-state, #unit-hidden-state" ).getAttribute("checked");
+          let type = gid.split("/")[3]
+          let id = gid.split("/")[4]
+
+          let content = {
+            id: Number(id),
+            type: type,
+            title: title,
+            href: href,
+            hidden_state: !!hidden,
+            gid: gid,
+            first_submission_at: null
+          };
+
+          if (type === 'Assignment') {
+            allContent.assignments.push(content);
+          } else if (type === 'Lesson') {
+            allContent.lessons.push(content);
+          } else if (type === 'Unit') {
+            allContent.units.push(content);
+          }
+        }
+      } );
+      console.log("Path Content:", allContent);
+      return allContent;
+    }
+
     function scrape( sessionData, callback ) {
-        var userURI = id => `https://online.theironyard.com/admin/users/${id}`;
-        var slice = c => [].slice.call( c );
-        var qs = ( el, s ) => el.querySelector( s );
-        var qsa = ( el, s ) => slice( el.querySelectorAll( s ) );
+        const userURI = id => `https://online.theironyard.com/admin/users/${id}`;
 
         function scrapeStudentPage( students, assignments, url, html ) {
-            var studentPage = document.createElement( 'html' );
+            let studentPage = document.createElement( 'html' );
             studentPage.innerHTML = html;
 
-            var name = qs( studentPage, 'h1 strong' ).innerText;
+            let name = qs( studentPage, 'h1 strong' ).innerText;
             let studentId = idFromUrl( url );
 
             students[ studentId ] = {
@@ -295,59 +354,61 @@
                 } );
 
                 if ( assignment ) {
-                    if ( submission.submitted_at < assignment.first_submission_at ) {
+                    if (assignment.first_submission_at === null || submission.submitted_at < assignment.first_submission_at ) {
                         assignment.first_submission_at = submission.submitted_at;
                     }
+
+                  if ( !IGNORED_GRADES.includes( submission.grade ) ) {
+                      submission.assignment = assignment;
+                      let existingSubmission = students[ studentId ].submissions[ assignment.id ];
+                      if ( !( existingSubmission && existingSubmission.submitted_at > submission.submitted_at ) ) {
+                        students[ studentId ].submissions[ assignment.id ] = submission;
+                      }
+                  }
                 } else {
-                    assignment = {
-                        id: assignmentId,
-                        name: qs( row, 'td a' ).innerText,
-                        href: assignmentPath,
-                        first_submission_at: submission.submitted_at
-                    };
-                    assignments.push( assignment );
+                  console.log("Submission from other path", submission, students[ studentId ])
                 }
-
-                if ( !IGNORED_GRADES.includes( submission.grade ) ) {
-                    submission.assignment = assignment;
-                    let existingSubmission = students[ studentId ].submissions[ assignment.id ];
-                    if ( !( existingSubmission && existingSubmission.submitted_at > submission.submitted_at ) ) {
-                      students[ studentId ].submissions[ assignment.id ] = submission;
-                    }
-                }
-
             } );
 
         }
+        Promise.all( [getPathContent(sessionData.path)] ).then( ([pathWithContent]) => {
+          sessionData.path = pathWithContent;
 
-        Promise.all( [ sessionData.students ] ).then( ( [ s ] ) => {
-            let students = {};
-            let assignments = [];
+          Promise.all( [sessionData.students] ).then( ( [ s ] ) => {
+              let students = {};
+              let assignments = sessionData.path.content.assignments;
 
-            Promise.all( s.map( s => new Promise( ( res ) => {
-                $.get( userURI(s.id) ).then( html => res( scrapeStudentPage( students, assignments, userURI(s.id), html ) ) );
-            } ) ) ).then( () => {
+              Promise.all( s.map( s => new Promise( ( res ) => {
+                  $.get( userURI(s.id) ).then( html => res( scrapeStudentPage( students, assignments, userURI(s.id), html ) ) );
+              } ) ) ).then( () => {
 
-                assignments.sort( function( a, b ) {
-                    return new Date( b.first_submission_at ) - new Date( a.first_submission_at );
-                } );
+                  // Reject any assingments that have nothing turned in?
+                  // Thoughts, this could use hidden state?
+                  let submittedAssingments = assignments.filter( function( el ) {
+                      return el.first_submission_at !== null;
+                  } );
 
-                students = calculateGrades( students, assignments );
-                const gradebook = {
-                    id: sessionData.path.id,
-                    title: sessionData.path.title,
-                    students: students,
-                    assignments: assignments,
-                    scraped_at:  moment()
-                };
-                let gradebooks = loadCachedGradebooks();
+                  submittedAssingments.sort( function( a, b ) {
+                      return new Date( b.first_submission_at ) - new Date( a.first_submission_at );
+                  } );
 
-                gradebooks[sessionData.path.id] = gradebook;
+                  students = calculateGrades( students, submittedAssingments );
+                  const gradebook = {
+                      id: sessionData.path.id,
+                      title: sessionData.path.title,
+                      students: students,
+                      assignments: submittedAssingments,
+                      scraped_at:  moment()
+                  };
+                  let gradebooks = loadCachedGradebooks();
 
-                localStorage.setItem( 'cachedGradeBookData', JSON.stringify( gradebooks ) );
-                callback( gradebook );
-            } );
-        } );
+                  gradebooks[sessionData.path.id] = gradebook;
+
+                  localStorage.setItem( 'cachedGradeBookData', JSON.stringify( gradebooks ) );
+                  callback( gradebook );
+              } );
+          } );
+        });
     }
 
 } )( window.tiy || {}, window.jQuery, window.moment );

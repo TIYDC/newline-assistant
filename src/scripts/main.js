@@ -3,11 +3,13 @@
 
     // Public API methods
     tiy.loadModule = loadModule;
+    tiy.showMessage = showMessage;
 
     // locals & constants
     let tiyoData = null;
     let navUI = null;
     let mainUI = null;
+    let notifyUI = null;
     let modulesLoaded = [];
     let moduleDisplayed = null;
     let dataLoaded = false;
@@ -15,12 +17,14 @@
 
     const MAIN_TEMPLATE = 'templates/main.html';
     const NAV_TEMPLATE = 'templates/nav.html';
+    const NOTIFICATIONS_TEMPLATE = 'templates/notifications.html';
     const PANEL_ANIMATION_TIME = 200;
 
     function main() {
         console.info('Initializing TIYO assistant');
 
         addFontAwesomeStyleSheet();
+        setupNotificationsUI();
 
         collectData()
         .then(function getNavUI(data) {
@@ -101,7 +105,8 @@
         if (/\/admin\/paths\/[0-9]+/.test(window.location.pathname)) {
             data.path = {
                 id: Number(pathname[3]),
-                title: $('.content .breadcrumb li:eq(1)').text()
+                title: $('.content .breadcrumb li:eq(1)').text(),
+                onPage: true
             };
         }
 
@@ -119,7 +124,8 @@
         if (/\/paths\/[0-9]+\/units\/[0-9]+\/[^\/]+\/[0-9]+/.test(window.location.pathname)) {
             data.path = {
                 id: Number(pathname[2]),
-                title: $('.m-pathheader-info-title').text()
+                title: $('.m-pathheader-info-title').text(),
+                onPage: false
             };
             data.content = {
                 id: Number(pathname[6]),
@@ -214,6 +220,36 @@
         var elem = $(`<article data-module='${mod.name}'>`).addClass('tiyo-assistant-module');
         $(mainUI).find('.tiyo-assistant-content').append(elem);
         return elem;
+    }
+
+    function setupNotificationsUI() {
+        $.get(chrome.extension.getURL(NOTIFICATIONS_TEMPLATE)).then(function(html) {
+            notifyUI = $(html).appendTo('body');
+            notifyUI.on('click', '.close', function() {
+                $(this).parent().fadeOut(function() { $(this).remove(); });
+            });
+        });
+    }
+
+    function showMessage(msg, options = {}) {
+        options.type = options.type || 'danger';
+        options.duration = (Number(options.duration) || options.duration === 0) ? options.duration : 4;
+
+        let dismissable = (options.canDismiss === false) ? '' : 'alert-dismissible';
+
+        let msgNode = $(`<p class='alert alert-${options.type} ${dismissable}'>`).text(msg);
+
+        if (dismissable.length) {
+            msgNode.append(`<button class='close'>&times;</button>`);
+        }
+
+        notifyUI.append(msgNode);
+
+        if (options.duration && options.duration > 0) {
+            setTimeout(function() {
+                msgNode.fadeOut(function() { $(this).remove(); });
+            }, (options.duration * 1000));
+        }
     }
 
     // Kick things off...

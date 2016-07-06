@@ -27,14 +27,14 @@
             localStorage.setItem(NOTES_KEY, JSON.stringify(notesData));
         }
 
-        if (pageData.path && pageData.path.id) {
-            addNotesIcons();
+        if (pageData.content && pageData.content.id && !pageData.content.isAdmin) {
+            addViewContentNotesUI();
         } else if (pageData.content && pageData.content.id && pageData.content.isAdmin) {
             addEditContentNotesUI();
-        } else if (pageData.content && pageData.content.id) {
-            addViewContentNotesUI();
+        } else if (pageData.path && pageData.path.id) {
+            addNotesIcons();
         }
-
+        
         setupImportExport();
     }
 
@@ -54,7 +54,6 @@
 
     function importNotes(e) {
         e.preventDefault();
-        $('.tiyo-assistant-notice').text('');
 
         let $fileInput = $(this).find('[type=file]');
         let reader = new FileReader();
@@ -64,14 +63,14 @@
             try {
                 data = JSON.parse(readEvent.target.result);
             } catch(err) {
-                $('.tiyo-assistant-notice').text('It looks like that is not a valid JSON file!');
+                tiy.showMessage('It looks like that is not a valid JSON file!', { duration: 0 });
             }
             console.info('importing data', data);
             $fileInput.val('');
 
             if (data) {
                 mergeNotesData(data);
-                $('.tiyo-assistant-notice').text('Notes data imported and merged!');
+                tiy.showMessage('Notes data imported and merged!', { type: 'success' });
             }
         };
         reader.readAsText($fileInput[0].files[0]);
@@ -186,6 +185,7 @@
         notesData[''+id] = notes;
         localStorage.setItem(NOTES_KEY, JSON.stringify(notesData));
         updateNotesExport();
+        tiy.showMessage('Notes Saved!', { type: 'success', duration: 2 });
     }
 
 

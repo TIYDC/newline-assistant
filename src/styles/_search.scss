@@ -18,11 +18,12 @@ form.tiyo-assistant-search [type=text] {
     background-image: none;
     border: 0.0625rem solid #ccc;
     border-radius: 0.25rem;
-}
-form.tiyo-assistant-search [type=text]:focus {
-    outline: none;
-    box-shadow: 0 0 5px rgba(81, 203, 238, 1);
-    border: 1px solid transparent;
+
+    &:focus {
+        outline: none;
+        box-shadow: 0 0 5px rgba(81, 203, 238, 1);
+        border: 1px solid transparent;
+    }
 }
 
 .tiyo-assistant-search-age {
@@ -31,4 +32,45 @@ form.tiyo-assistant-search [type=text]:focus {
     font-size: 0.9em;
     color: #666;
     padding-top: 0.3em;
+}
+
+.tiyo-assistant-tag {
+    margin-left: 0.5em;
+    cursor: pointer;
+
+    &:hover {
+        background-color: #508d9f;
+    }
+}
+.path-tree .tiyo-assistant-tag:hover {
+    text-decoration: line-through;
+}
+
+i.tiyo-assistant-add-tag {
+    display: inline-block;
+    float: right;
+    padding-top: 3px;
+    margin-right: 0.8em;
+    cursor: pointer;
+    color: #666;
+
+    &:hover {
+        color: #333;
+    }
+}
+
+input.tiyo-assistant-new-tag {
+    display: none;
+    margin-left: 0.5em;
+    color: #656D78;
+    background-color: #fff;
+    background-image: none;
+    border: 0.0625rem solid #ccc;
+    border-radius: 0.25rem;
+
+    &:focus {
+        outline: none;
+        box-shadow: 0 0 5px rgba(81, 203, 238, 1);
+        border: 1px solid transparent;
+    }
 }
