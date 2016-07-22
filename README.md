@@ -38,6 +38,16 @@ While on a Path you can search all text in any lesson or assignment. Click on th
 
 Once the index is built, simply type you search query and hit enter. The results will appear immediately below the search box and will link to the pieces of content that query appears in.
 
+#### Content Tagging
+
+You can add tags to any piece of content (lesson or assignment) by clicking on the tag icon next to the content and then typing in the input next to the content name (see screenshot below). The tags should be **comma separated**, but there is no limit to how many you can add. Clicking on a tag next to the content will **remove that tag**.
+
+![tagging screenshot](http://i.imgur.com/RvW3yIw.png)
+
+When you search for content, the results will also show the tags, and tags will be weighted heavily in the results. Thus, content pieces with a tag will show up higher in search results. Clicking on a tag in searching results **will not remove the tag**, but instead it will change you search query to match that tag.
+
+![searching for tags](http://i.imgur.com/PAxlPe6.png)
+
 ### Instructor Notes
 
 The instructor notes allow just that: notes by instructors (for instructors only). While viewing a path an instructor will now have an additional icon next to the "current" and "hide/show" icons to the right of each content piece (lesson or assignment). Clicking on the notes icon there (it looks like a sticky note) will pop up a simple modal for entering notes. These notes are saved in `localStorage` only!
