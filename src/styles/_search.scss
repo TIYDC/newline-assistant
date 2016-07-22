@@ -74,3 +74,16 @@ input.tiyo-assistant-new-tag {
         border: 1px solid transparent;
     }
 }
+
+.tiyo-assistant-copy-to-path {
+    float: right;
+    
+    &.showing .tiyo-assistant-show-copy {
+        display: none;
+    }
+    &:not(.showing) {
+        [name="path-id"], [type="submit"] {
+            display: none;
+        }
+    }
+}
