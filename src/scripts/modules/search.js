@@ -34,17 +34,19 @@
                     $ui.find('.tiyo-assistant-search-refresh').click(function() {
                         buildIndex(indexData);
                     });
-                    $ui.find('form').submit(function(e) {
+                    $ui.find('.tiyo-assistant-search').submit(function(e) {
                         e.preventDefault();
                         doSearch($(this).find('[type=text]').val(), indexData);
                     });
                     $('.tiyo-assistant-search-results').on('click', '.tiyo-assistant-tag', function() {
-                        $ui.find('form')
+                        $ui.find('.tiyo-assistant-search')
                             .find('input[type=text]')
                                 .val($(this).text())
                                 .end()
                             .submit();
                     });
+
+                    setUpTagCopy();
                 });
 
             addTagIcons();
@@ -60,21 +62,26 @@
         return `<span class='tiyo-assistant-tag label label-info' title='${title}'>${tag}</span>`;
     }
 
-    function reverseTagData() {
+    function getTagsByContent(prop) {
         let tagsByContent = {};
+        prop = (prop || 'id');
+
         Object.keys(tagData).forEach(function(tag) {
             tagData[tag].forEach(function(content) {
-                if (!tagsByContent[content.id]) {
-                    tagsByContent[content.id] = [];
+                if (content.p !== pageData.path.id) {
+                    return;
                 }
-                tagsByContent[content.id].push(tag);
+                if (!tagsByContent[content[prop]]) {
+                    tagsByContent[content[prop]] = [];
+                }
+                tagsByContent[content[prop]].push(tag);
             });
         });
         return tagsByContent;
     }
 
     function addTagIcons() {
-        let tagsByContent = reverseTagData();
+        let tagsByContent = getTagsByContent('id');
 
         $('.path-tree-lessons .text-body').each(function() {
             let id = $(this).attr('href').match(/\/(\d+)$/);
@@ -116,7 +123,7 @@
             });
     }
 
-    function getContentFromNode(contentNode) {
+    function getContentFromNode(contentNode, path) {
         let link = contentNode.find('.text-body');
         if (!link.length) { return; }
         let href = link.attr('href').match(/(lessons|assigments)\/(\d+)/);
@@ -125,7 +132,8 @@
         return {
             u: unit,
             id: Number(href[2]),
-            p: pageData.path.id,
+            p: path || pageData.path.id,
+            n: link.text(),
             t: (href[1] === 'lessons') ? 'l' : 'a'
         };
     }
@@ -152,16 +160,16 @@
         }
     }
 
-    function addTag(contentNode, tag) {
+    function addTag(contentNode, tag, path) {
         tag = tag.trim();
 
         if (tag.indexOf(',') > -1) {
             return tag.split(/\,/).forEach(function(splitTag) {
-                addTag(contentNode, splitTag);
+                addTag(contentNode, splitTag, path);
             });
         }
 
-        let content = getContentFromNode(contentNode);
+        let content = getContentFromNode(contentNode, path);
         if (!content) {
             return console.warn('Content node is not a lesson or assignment.', contentNode);
         }
@@ -255,7 +263,7 @@
 
         console.log('search results built', sortedResults);
 
-        let tagsByContent = reverseTagData();
+        let tagsByContent = getTagsByContent('id');
 
         let resultItems = [];
         resultItems = sortedResults.map(function(result) {
@@ -377,6 +385,65 @@
             return countWord(content.replace(/^\s*([\w\-\']+)\s+/, ''), hist);
         }
         return hist;
+    }
+
+    function setUpTagCopy() {
+        $ui.find('.tiyo-assistant-copy-to-path')
+            .on('submit', function(e) {
+                let $that = $(this);
+                e.preventDefault();
+
+                let id = Number($that.find('[name="path-id"]').val());
+                if (id) {
+                    doTagCopy(id)
+                        .done(function() {
+                            $that.toggleClass('showing');
+                            $that.find('[name="path-id"]').val('');
+                            tiy.showMessage('Copied tags from Path ' + pageData.path.id + ' to ' + id, { type: 'success' });
+                        })
+                        .fail(function(err) {
+                            console.warn(err);
+                            tiy.showMessage('Unable to copy tags to new path.', { type: 'danger' });
+                        });
+                }
+            })
+            .find('[name="path-id"]')
+                .on('keyup', function(e) {
+                    if (e.keyCode === 27) {
+                        $(this).parent().removeClass('showing');
+                    }
+                })
+                .end()
+            .find('.tiyo-assistant-show-copy')
+                .on('click', function(e) {
+                    e.preventDefault();
+                    $(this)
+                        .parent()
+                            .toggleClass('showing')
+                            .find('[name="path-id"]')
+                                .focus();
+
+                });
+    }
+
+    function doTagCopy(id) {
+        console.info('Copying tags from %d to %d', pageData.path.id, id);
+
+        return $.get(`/admin/paths/${id}`)
+            .done(function(html) {
+                let tagsByContent = getTagsByContent('n');
+
+                $(html).find('.lesson, .assignment').find('.text-body')
+                    .each(function(i, content) {
+                        if (tagsByContent[content.innerText]) {
+                            addTag(
+                                $(content).parents('.lesson, .assignment'),
+                                tagsByContent[content.innerText].join(', '),
+                                id
+                            );
+                        }
+                    });
+            });
     }
 
 
