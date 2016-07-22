@@ -1,6 +1,6 @@
-# TIYO Assistant
+# TIYO Assistant (TA)
 
-This is a chrome extension to assist with The Iron Yard Online for instructors. Since this is not (yet?) a distributed extension, you will need to clone this repo (or download it) in order to use it.
+This is a chrome extension to assist with The Iron Yard Online for instructors. Think of it as your digital TA.
 
 * [Using this extension](#using-this-extension)
   * [Install It](#install-it)
@@ -47,6 +47,12 @@ You can add tags to any piece of content (lesson or assignment) by clicking on t
 When you search for content, the results will also show the tags, and tags will be weighted heavily in the results. Thus, content pieces with a tag will show up higher in search results. Clicking on a tag in searching results **will not remove the tag**, but instead it will change you search query to match that tag.
 
 ![searching for tags](http://i.imgur.com/PAxlPe6.png)
+
+#### Copying Tags to Another Path
+
+All tags are restricted to the path they were created on. That means when you clone a path all tags will be "left behind". Because of this, you can copy all tags from the current path to any other path. This process uses the content name (lesson or assignment title) to match tags on the new (hopefully cloned) path.
+
+To do this, open up the "Search" module while on a path (that's the magnifying glass icon in the top right). Click on the "Copy Tags to Path" button and enter the new path's ID. Click on "Copy Tags" and way a moment while the TA does its thing. You'll get a message indicating success or failure.
 
 ### Instructor Notes
 
