@@ -83,8 +83,10 @@
             return  JSON.parse(
                 $( "#IntercomSettingsScriptTag" )
                 .text()
+                .split(";")[0]
                 .replace("window.intercomSettings =", "")
                 .replace(";", "")
+                .trim()
             );
         } catch (e) {
             return;
