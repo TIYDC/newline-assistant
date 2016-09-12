@@ -61,7 +61,7 @@
 
     /**
     * Chrome extensions have issues with access files from css like fonts, so
-    * we need to embed the styelsheet using the chromse extension URL, which
+    * we need to embed the stylesheet using the chrome's extension URL, which
     * is dynamically generated. The remainder of the FA styles are in a static
     * stylesheet in /vendor
     */
@@ -100,7 +100,8 @@
                 path: null,
                 content: null,
                 group: null,
-                students: []
+                students: [],
+                settings: {}
             },
             group = $('.card-block dt:contains("Group")').next().find('a');
 
