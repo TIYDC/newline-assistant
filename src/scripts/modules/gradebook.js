@@ -184,9 +184,9 @@
 
         for ( let assignment of assignments ) {
             row.append( `
-              <th data-tooltip='${assignment.title}'>
-                <a href='${assignment.href}' title='${assignment.title}'>
-                  ${assignment.title.slice( 0, 1 )}
+              <th data-tooltip='${assignment.name}'>
+                <a href='${assignment.href}' title='${assignment.name}'>
+                  ${assignment.title.slice( 0, 2 )}
                 </a>
               </th>
             ` );
