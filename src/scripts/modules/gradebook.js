@@ -10,14 +10,37 @@
     let uiBuilt = false;
 
     const TABLE_TEMPLATE = `
-      <h6 id='path-title'></h6>
-
       <table class="table table-condensed">
         <thead></thead>
         <tbody></tbody>
       </table>
+    `;
+
+    const GRADEBOOK_TEMPLATE = `
+      <h6 id='path-title'></h6>
+
+      <div class="grades">
+        ${TABLE_TEMPLATE}
+      </div>
+      
       <br>
       <section class="actions">
+        <div id="display-options">
+            Show assignments:
+            <label>
+                <input type="checkbox" id="show_without_due_date" /> without due dates
+            </label>
+            <label>
+                <input type="checkbox" id="show_with_future_due_date" /> with future due dates
+            </label>
+            <label>
+                <input type="checkbox" id="show_with_no_submissions" /> with no submissions
+            </label>
+            <label>
+                <input type="checkbox" id="show_hidden" /> hidden assignments
+            </label>
+        </div>
+        
         <button type="button" class="btn btn-secondary btn-sm" id="generate-score-card">
           <i class="fa fa-refresh"></i> Refresh Grades
         </button>
@@ -25,6 +48,8 @@
           as of
           <span id='last-scraped'>Never</span>
         </small>
+        
+        
       </section>
       `;
 
@@ -53,6 +78,8 @@
     const qsa = ( el, s ) => slice( el.querySelectorAll( s ) );
 
     // Behavior ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
 
     function main( sessionData, $el ) {
         $( $el ).on( 'showing', function() {
@@ -84,6 +111,7 @@
     }
 
     function show( sessionData, $el ) {
+
         if ( uiBuilt ) {
             return;
         }
@@ -105,6 +133,8 @@
 
         resetUI( sessionData, $el );
 
+        sessionData.settings = JSON.parse(localStorage.getItem( 'display_settings' )) || {};
+
         if ( gradebook_data ) {
             try {
                 buildUI(
@@ -120,6 +150,23 @@
         }
 
         uiBuilt = true;
+
+        $("#display-options input[type='checkbox']").click(function(){
+            let display_settings = {};
+
+            $("#display-options input[type='checkbox']").each(function(item){
+                let setting = $(this).attr("id");
+                let enabled = $(this).is(':checked');
+                display_settings[setting] = enabled;    
+            });
+
+            localStorage.setItem( 'display_settings', JSON.stringify( display_settings ) );
+            
+            sessionData.settings = display_settings;
+            
+            $el.find("table").replaceWith(TABLE_TEMPLATE);
+            buildUI( sessionData, $el, gradebook_data );
+        });
     }
 
 
@@ -130,7 +177,9 @@
 
         try {
             scrape( sessionData, function( gradebook ) {
-                resetUI( sessionData, $el );
+                $el.find("table").replaceWith(TABLE_TEMPLATE);
+                $( '#generate-score-card' ).text( "Refresh Grades" ).attr( "disabled", false );
+
                 buildUI( sessionData, $el, gradebook );
             } );
         } catch ( e ) {
@@ -144,7 +193,7 @@
 
     function resetUI( sessionData, $el ) {
         $el.html( '' );
-        $el.append( TABLE_TEMPLATE );
+        $el.append( GRADEBOOK_TEMPLATE );
 
         $( '#generate-score-card' ).click( function() {
             getGradebook( sessionData, $el );
@@ -152,11 +201,17 @@
     }
 
     function buildUI( sessionData, $el, gradebook ) {
-      let students = gradebook.students;
-      let assignments = gradebook.assignments;
+
+        $("#show_without_due_date").prop("checked", sessionData.settings.show_without_due_date);
+        $("#show_with_future_due_date").prop("checked", sessionData.settings.show_with_future_due_date);
+        $("#show_with_no_submissions").prop("checked", sessionData.settings.show_with_no_submissions);
+        $("#show_hidden").prop("checked", sessionData.settings.show_hidden);
+
+        let students = gradebook.students;
+        let assignments = gradebook.assignments;
         const $table = $el.find( 'table' );
         $table.find( 'thead' )
-            .append( buildAssignmentsHeader( assignments ) );
+            .append( buildAssignmentsHeader( assignments, sessionData.settings ) );
 
         const orderedStudents = Object.keys( students ).sort();
         for ( let studentId of orderedStudents ) {
@@ -166,7 +221,7 @@
             }
 
             let student = students[ studentId ];
-            $table.append( buildStudentRow( student, assignments ) );
+            $table.append( buildStudentRow( student, assignments, sessionData.settings ) );
         }
 
         $el.find('#path-title').html(
@@ -177,25 +232,50 @@
 
     }
 
-    function buildAssignmentsHeader( assignments ) {
+    function buildAssignmentsHeader( assignments, settings ) {
         const row = $( '<tr>' );
         row.append( $( '<th>' ).append( "Student" ) );
         row.append( $( '<th>' ).append( "Grade" ) );
 
         for ( let assignment of assignments ) {
-            row.append( `
-              <th data-tooltip='${assignment.title}'>
-                <a href='${assignment.href}' title='${assignment.title}'>
-                  ${assignment.title.slice( 0, 1 )}
-                </a>
-              </th>
-            ` );
+            if(displayAssignment(assignment, settings)){
+                row.append( `
+                  <th data-tooltip='${assignment.title}'>
+                    <a href='${assignment.href}' title='${assignment.title}' class="title">
+                      ${assignment.title}
+                    </a>
+                  </th>
+                ` ); // .slice( 0, 1 )
+            }
         }
 
         return row;
     }
 
-    function buildStudentRow( student, assignments ) {
+    function displayAssignment(assignment, settings){
+        let display = true;
+
+        // display assignments without a due date?
+        if(!settings.show_without_due_date && assignment.due_date === null){
+            display = false;
+        }
+        // display assignments with a future due date?
+        if(!settings.show_with_future_due_date && new Date(assignment.due_date) > new Date()){
+            display = false;
+        }
+        // display assignments with no submissions?
+        if(!settings.show_with_no_submissions && assignment.first_submission_at === null){
+            display = false;
+        }
+        // display hidden assignments?
+        if(!settings.show_hidden && assignment.hidden_state === true){
+            display = false;
+        }
+
+        return display;
+    }
+
+    function buildStudentRow( student, assignments, settings ) {
         const studentRow = $( '<tr>' );
 
         studentRow.append(
@@ -209,29 +289,51 @@
         );
 
         studentRow.append(
-            `<td>${student.percentage}%</td>`
+            `<td>${calculateStudentPercentage(student, assignments, settings)}%</td>`
         );
 
         for ( let assignment of assignments ) {
-            let submission = student.submissions[ assignment.id ];
+            if(displayAssignment(assignment, settings)){
+                let submission = student.submissions[ assignment.id ];
 
-            if ( submission ) {
-                let gradeClass = SHORT_GRADE_NAMES[ submission.grade ].toLowerCase();
-                studentRow.append(
-                    `
-                  <td class='grade ${gradeClass}' date-tooltip='${assignment.title}' >
-                    <a href='${submission.href}' title='${assignment.title}' target='blank' >
-                      ${SHORT_GRADE_NAMES[ submission.grade ]}
-                    </a>
-                  </td>
-                  `
-                );
-            } else {
-                studentRow.append( '<td></td>' );
+                let gradeClass = submission && submission.grade ? SHORT_GRADE_NAMES[ submission.grade ].toLowerCase() : "none";
+
+                if ( submission ) {
+                    studentRow.append(
+                        `
+                      <td class='grade ${gradeClass}' date-tooltip='${assignment.title}' >
+                        <a href='${submission.href}' title='${assignment.title}' target='blank' >
+                          ${SHORT_GRADE_NAMES[ submission.grade ]}
+                        </a>
+                      </td>
+                      `
+                    );
+                } else {
+                    studentRow.append( `
+                      <td class='grade ${gradeClass}' date-tooltip='${assignment.title}' >
+                        <span>&nbsp;</span>
+                      </td>
+                    ` );
+                }
             }
         }
 
         return studentRow;
+    }
+
+    function calculateStudentPercentage(student, assignments, settings){
+        // filter to only the assignments we want to display
+        let filtered_assignments = assignments.filter( assignment => displayAssignment(assignment, settings));
+        let filtered_assignment_ids = filtered_assignments.map( assignment => assignment.id );
+
+        var submissions = Object.keys( student.submissions );
+
+        var okCount = submissions.filter( assignmentId => {
+            return OK_GRADES.includes( student.submissions[ assignmentId ].grade ) && filtered_assignment_ids.includes(parseInt(assignmentId));
+        } );
+
+        let percent = (okCount.length / filtered_assignments.length) * 100;
+        return percent.toFixed(0);
     }
 
     // Data Management +++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -296,6 +398,11 @@
           let type = gid.split("/")[3]
           let id = gid.split("/")[4]
 
+          /*
+            todo: add fields on assignments for:
+                -- assignment required (or due date)
+                -- number of submissions total
+           */
           let content = {
             id: Number(id),
             type: type,
@@ -307,7 +414,9 @@
           };
 
           if (type === 'Assignment') {
-            allContent.assignments.push(content);
+            scrapeAssignmentDueDate(content, (content) => {
+                allContent.assignments.push(content);
+            });
           } else if (type === 'Lesson') {
             allContent.lessons.push(content);
           } else if (type === 'Unit') {
@@ -317,6 +426,39 @@
       } );
       console.log("Path Content:", allContent);
       return allContent;
+    }
+
+    function scrapeAssignmentDueDate(content, callback){
+        const assignmentURI = href => `https://online.theironyard.com${href}`;
+
+          $.get( assignmentURI(content.href) ).then( html => {
+            var dom = document.createElement( 'html' );
+            dom.innerHTML = html;
+            content.due_date = new Date( qsa( dom, '.card-block div:last-child > p:last-child' )[0].innerText );
+            if(content.due_date == "Invalid Date") content.due_date = null;
+            callback( content );
+          } ).fail( err => {
+              console.info("doh!");
+              callback( content );
+          });
+    }
+
+    function getAssignmentContent(path) {
+      const pathURI = id => `https://online.theironyard.com/admin/paths/${ id }`;
+
+      return new Promise( ( res, rej ) => {
+        if (/\/admin\/paths\/[0-9]+/.test(window.location.pathname)) {
+          path.content = scrapePathContent(document)
+          res(path);
+        } else {
+          $.get( pathURI( path.id ) ).then( html => {
+            var dom = document.createElement( 'html' );
+            dom.innerHTML = html;
+            path.content = scrapePathContent(dom)
+            res( path );
+          } ).fail( err => rej(err));
+        }
+      } );
     }
 
     function scrape( sessionData, callback ) {
@@ -382,22 +524,19 @@
                   $.get( userURI(s.id) ).then( html => res( scrapeStudentPage( students, assignments, userURI(s.id), html ) ) );
               } ) ) ).then( () => {
 
-                  // Reject any assingments that have nothing turned in?
-                  // Thoughts, this could use hidden state?
-                  let submittedAssingments = assignments.filter( function( el ) {
-                      return el.first_submission_at !== null;
-                  } );
-
-                  submittedAssingments.sort( function( a, b ) {
+                  // use the path's sorting as the correct sort order
+                  /*assignments.sort( function( a, b ) {
                       return new Date( b.first_submission_at ) - new Date( a.first_submission_at );
-                  } );
+                  } ); */
 
-                  students = calculateGrades( students, submittedAssingments );
+                  // don't calculate grade ahead of time
+                  //students = calculateGrades( students, assignments );
+
                   const gradebook = {
                       id: sessionData.path.id,
                       title: sessionData.path.title,
                       students: students,
-                      assignments: submittedAssingments,
+                      assignments: assignments,
                       scraped_at:  moment()
                   };
                   let gradebooks = loadCachedGradebooks();
