@@ -12,12 +12,12 @@
     const TABLE_TEMPLATE = `
       <h6 id='path-title'></h6>
 
-      <div class="grades">
+      <section class="grades">
         <table class="table table-condensed">
           <thead></thead>
           <tbody></tbody>
         </table>
-      </div>
+      </section>
       <br>
       <section class="actions">
         <button type="button" class="btn btn-secondary btn-sm" id="generate-score-card">
