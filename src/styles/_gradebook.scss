@@ -1,12 +1,20 @@
 .tiyo-assistant {
+    .grades{
+        overflow-x: scroll;
+        padding-top: 1em;
+        margin-top: -1em;
+    }
     table.table {
         td,
         th {
+            border-right: 1px solid #F5F5F5;
             font-size: 0.6em;
             padding: 0;
             position: relative;
+            text-align: center;
             &:nth-child(-n+2) {
                 font-size: 0.8em;
+                text-align: left;
             }
             &.u {
                 background-color: #e74c3c;
@@ -23,7 +31,10 @@
             &.s {
                 background-color: #6fbbb7;
             }
-            &.grade a {
+            &.none {
+                min-width: 1em;
+            }
+            &.grade a, &.grade span {
                 display: block;
                 width: 100%;
                 padding: 0.4rem !important;
@@ -45,6 +56,20 @@
                 z-index: 3;
                 border-radius: 2px;
             }
+        }
+        td:first-child{
+            white-space: nowrap;
+        }
+        a.title{
+            display: block;
+            font-size: 0;
+            overflow: hidden;
+            white-space: nowrap;
+        }
+        a.title:first-letter{
+            display: block;
+            visibility: visible;
+            font-size: 0.6rem;
         }
     }
 }

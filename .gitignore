@@ -5,3 +5,5 @@ node_modules/
 build/
 *.crx
 *.zip
+.idea/
+tiyo-assistant.iml
