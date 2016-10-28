@@ -151,6 +151,11 @@
         $( '#generate-score-card' ).click( function() {
             getGradebook( sessionData, $el );
         } );
+
+        $el.find('tbody')
+            .on('click', 'td.grade', function() {
+                $(this).parent().siblings('tr').toggle();
+            });
     }
 
     function buildUI( sessionData, $el, gradebook ) {
@@ -211,7 +216,7 @@
         );
 
         studentRow.append(
-            `<td>${student.percentage}%</td>`
+            `<td class='grade' title='Click here to toggle other student grades visibility'>${student.percentage}%</td>`
         );
 
         for ( let assignment of assignments ) {

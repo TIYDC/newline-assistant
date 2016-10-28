@@ -5,6 +5,10 @@
         margin-top: -1em;
     }
     table.table {
+        .grade {
+            cursor: pointer;
+        }
+
         td,
         th {
             border-right: 1px solid #F5F5F5;
