@@ -193,7 +193,7 @@
             row.append( `
               <th data-tooltip='${assignment.title}'>
                 <a href='${assignment.href}' title='${assignment.title}' class="title">
-                  ${assignment.title}
+                  ${assignment.title.slice( 0, 1 )}
                 </a>
               </th>
             ` );
