@@ -153,7 +153,7 @@
         } );
 
         $el.find('tbody')
-            .on('click', 'td.grade', function() {
+            .on('click', 'td.grade-percent', function() {
                 $(this).parent().siblings('tr').toggle();
             });
     }
@@ -216,7 +216,7 @@
         );
 
         studentRow.append(
-            `<td class='grade' title='Click here to toggle other student grades visibility'>${student.percentage}%</td>`
+            `<td class='grade-percent' title='Click here to toggle other student grades visibility'>${student.percentage}%</td>`
         );
 
         for ( let assignment of assignments ) {
