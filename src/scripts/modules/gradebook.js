@@ -151,6 +151,11 @@
         $( '#generate-score-card' ).click( function() {
             getGradebook( sessionData, $el );
         } );
+
+        $el.find('tbody')
+            .on('click', 'td.grade-percent', function() {
+                $(this).parent().siblings('tr').toggle();
+            });
     }
 
     function buildUI( sessionData, $el, gradebook ) {
@@ -188,7 +193,7 @@
             row.append( `
               <th data-tooltip='${assignment.title}'>
                 <a href='${assignment.href}' title='${assignment.title}' class="title">
-                  ${assignment.title}
+                  ${assignment.title.slice( 0, 1 )}
                 </a>
               </th>
             ` );
@@ -211,7 +216,7 @@
         );
 
         studentRow.append(
-            `<td>${student.percentage}%</td>`
+            `<td class='grade-percent' title='Click here to toggle other student grades visibility'>${student.percentage}%</td>`
         );
 
         for ( let assignment of assignments ) {
