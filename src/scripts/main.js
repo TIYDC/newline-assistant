@@ -23,7 +23,7 @@
     function main() {
         let spaceUsed = Object.keys(localStorage).reduce(function(total, k) {
             return ((typeof(total) === 'number' && total) || 0) + ((localStorage[k].length * 2)/1024/1024);
-        });
+        }, 0);
         console.info('Initializing TIYO assistant... total localStorage used: ~%sMB', spaceUsed.toFixed(2));
 
         addFontAwesomeStyleSheet();
