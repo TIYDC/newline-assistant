@@ -41,6 +41,13 @@ module.exports = function(grunt) {
                 options: {
                     sourceMap: true
                 }
+            },
+            worker: {
+                src: ['src/scripts/worker/worker.js', 'src/scripts/worker/**/*.js'],
+                dest: 'build/tiyo-assistant-worker.js',
+                options: {
+                    sourceMap: true
+                }
             }
         },
 
