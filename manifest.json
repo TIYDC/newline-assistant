@@ -13,7 +13,7 @@
     },
   "permissions": [
     "activeTab",
-    "nativeMessaging",
+    "nativeMessaging"
   ],
   "web_accessible_resources": [
     "templates/*",
