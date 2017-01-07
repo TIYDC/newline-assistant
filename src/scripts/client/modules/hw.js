@@ -1,4 +1,4 @@
-( function( tiy ) {
+( function( tiy, moment ) {
   'use strict';
 
   let $ui = null;
@@ -6,15 +6,16 @@
 
   tiy.loadModule( {
     name: 'hw',
-    navIcon: 'fa-pencil',
+    navIcon: 'fa-download',
     render: main
   } );
 
   function main( data, elem ) {
     $ui = $( elem );
     pageData = data;
-    console.log( pageData );
+
     detectNativeClient( function handleNativeClient( response ) {
+      addMainContent($ui, response);
       if ( response.status === "ok" ) {
         console.log( "Native Client detected", response );
         updateUIClientPresent( response );
@@ -24,8 +25,20 @@
     } );
   }
 
-  function updateUIClientPresent() {
+  function addMainContent($ui, response) {
+    $ui
+      .append(`Newline HW ${response.status ? 'detected' : 'not found'} `)
+      .append(`
+        <small>
+        Last Hearbeat at ${moment(response.data.message_id).fromNow()}
+        using ruby ${response.data.ruby_version}
+        and
+        using newline-hw ${response.data.version}
+        </small>
+      `);
+  }
 
+  function updateUIClientPresent() {
     if (pageData.assignment_submission) {
       $( ".edit_assignment_submission" ).first().append(
         `<a class="btn btn-primary btn-sm">Clone Assignment Locally</a>`
@@ -103,4 +116,4 @@
     } );
   }
 
-} )( window.tiy || {} );
+} )( window.tiy || {}, window.moment );
