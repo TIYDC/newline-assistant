@@ -30,7 +30,7 @@
       .append(`Newline HW ${response.status ? 'detected' : 'not found'} `)
       .append(`
         <small>
-        Last Hearbeat at ${moment(response.data.message_id).fromNow()}
+        Last Hearbeat at ${moment(response.data.message_at).fromNow()}
         using ruby ${response.data.ruby_version}
         and
         using newline-hw ${response.data.version}

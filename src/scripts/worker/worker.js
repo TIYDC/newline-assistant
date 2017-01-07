@@ -1,4 +1,5 @@
 (function(tiy){
+  'use strict';
   const hostName = "com.theironyard.newlinecli.hw";
   let connection;
   let pendingPromises = [];
@@ -10,7 +11,7 @@
   tiy.worker.pendingPromises = pendingPromises;
 
   function connect() {
-    console.log("Connecting to native messaging host", hostName)
+    console.log("Connecting to native messaging host", hostName);
     connection = chrome.runtime.connectNative(hostName);
     connection.onMessage.addListener(onNativeMessage);
     connection.onDisconnect.addListener(onDisconnected);
@@ -18,13 +19,13 @@
 
   function onNativeMessage(msg) {
     console.log("Message from host", msg);
-    if (msg.message_id) {
-      let findByMessageId = function (el) { return msg.message_id === el.message_id }
+    if (msg.message_at) {
+      let findByMessageId = function (el) { return msg.message_at === el.message_at; };
       let itemInQueue = pendingPromises.find(findByMessageId);
       let itemIndex = pendingPromises.findIndex(findByMessageId);
       if (itemInQueue) {
 
-        if (msg.status == "ok") {
+        if (msg.status === "ok") {
           itemInQueue.complete = true;
           itemInQueue.resolve(msg);
         } else  {
@@ -41,12 +42,12 @@
     if (!connection) {
       connect();
     }
-    const id = Date.now();
+    const at = Date.now();
     let resolve;
     let reject;
 
     let promise  = new Promise(function (res, rej){
-      const payload = { event: event, message_id: id,  data: data };
+      const payload = { event: event, message_at: at,  data: data };
       console.log("Sending Data to NewlineHW", payload);
       connection.postMessage(payload);
       resolve = res;
@@ -54,7 +55,7 @@
     });
 
     let item = {
-      message_id: id,
+      message_at: at,
       resolve,
       reject,
       complete: false
@@ -71,11 +72,11 @@
     return promise;
   }
 
-  function onDisconnected(message) {
+  function onDisconnected() {
     console.error("Failed to connect: " + chrome.runtime.lastError.message);
     pendingPromises.forEach(function closePromise(item) {
       item.reject(chrome.runtime.lastError.message);
-    })
+    });
     pendingPromises = [];
     connection = null;
   }
