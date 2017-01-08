@@ -47,58 +47,11 @@
 
   function updateUIClientPresent() {
     if ( pageData.assignment_submission ) {
-      const clone_link = $( ".edit_assignment_submission" ).first().append(
-        `
-        <a class="clone_and_open_submission btn btn-primary btn-sm">
-          Clone Assignment Locally
-        </a>
-        `
-      );
-
-      clone_link
-        .find( '.clone_and_open_submission' )
-        .click( function getSubmissionIDandCall( e ) {
-          e.preventDefault();
-          const self = $( this );
-
-          self.append( `
-          <i class='newline_hw_working fa fa-spin fa-spinner'></i>
-          ` );
-          triggerCloneEventForSubmissionID( pageData.assignment_submission.id, function() {
-            self.find( ".newline_hw_working" ).remove();
-          } );
-        } );
+      updateUIOnSubmissionPage();
     }
 
     if ( pageData.assignment ) {
-      const idFromUrl = uri => Number( uri.substr( uri.lastIndexOf( '/' ) + 1 ) );
-      const submission_links =
-        $( "#submissions a[href^='/admin/assignment_submissions']" );
-
-      const clone_link = submission_links.closest( "td" ).append(
-        ` | <a href="#" class="clone_and_open_submission">
-          <i class="fa fa-download" aria-hidden="true"></i>
-          Clone Assignment Locally
-        </a>`
-      );
-
-      clone_link
-        .find( '.clone_and_open_submission' )
-        .click( function getSubmissionIDandCall( e ) {
-          e.preventDefault();
-          const self = $( this );
-          const submission_id = idFromUrl(
-            self.closest( "td" ).find( "a[href^='/admin/assignment_submissions']" )[ 0 ].href
-          );
-
-          self.append( `
-            <i class='newline_hw_working fa fa-spin fa-spinner'></i>
-            ` );
-
-          triggerCloneEventForSubmissionID( submission_id, function() {
-            self.find( ".newline_hw_working" ).remove();
-          } );
-        } );
+      updateUIOnAssignmentPage();
     }
   }
 
@@ -112,6 +65,61 @@
           Download Newline HW to clone homework locally!
         </a>`
       );
+  }
+
+  function updateUIOnAssignmentPage () {
+    const idFromUrl = uri => Number( uri.substr( uri.lastIndexOf( '/' ) + 1 ) );
+    const submission_links =
+      $( "#submissions a[href^='/admin/assignment_submissions']" );
+
+    const clone_link = submission_links.closest( "td" ).append(
+      ` | <a href="#" class="clone_and_open_submission">
+        <i class="fa fa-download" aria-hidden="true"></i>
+        Clone Assignment Locally
+      </a>`
+    );
+
+    clone_link
+      .find( '.clone_and_open_submission' )
+      .click( function getSubmissionIDandCall( e ) {
+        e.preventDefault();
+        const self = $( this );
+        const submission_id = idFromUrl(
+          self.closest( "td" ).find( "a[href^='/admin/assignment_submissions']" )[ 0 ].href
+        );
+
+        self.append( `
+          <i class='newline_hw_working fa fa-spin fa-spinner'></i>
+          ` );
+
+        triggerCloneEventForSubmissionID( submission_id, function() {
+          self.find( ".newline_hw_working" ).remove();
+        } );
+      } );
+  }
+
+  function updateUIOnSubmissionPage () {
+    const clone_link = $( ".edit_assignment_submission" ).first().append(
+      `
+      <a class="clone_and_open_submission btn btn-primary btn-sm">
+        Clone Assignment Locally
+      </a>
+      `
+    );
+
+    clone_link
+      .find( '.clone_and_open_submission' )
+      .click( function getSubmissionIDandCall( e ) {
+        e.preventDefault();
+        const self = $( this );
+
+        self.append( `
+          <i class='newline_hw_working fa fa-spin fa-spinner'></i>
+        ` );
+        triggerCloneEventForSubmissionID( pageData.assignment_submission.id, function() {
+          self.find( ".newline_hw_working" ).remove();
+        } );
+      } );
   }
 
   function detectNativeClient( callback ) {
