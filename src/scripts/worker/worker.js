@@ -66,7 +66,7 @@
         item.reject('Timeout');
         item = null;
       }
-    }, 3000);
+    }, 5000);
 
     pendingPromises.push(item);
     return promise;
