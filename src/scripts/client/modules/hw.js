@@ -67,59 +67,83 @@
       );
   }
 
-  function updateUIOnAssignmentPage () {
+  function updateUIOnAssignmentPage() {
     const idFromUrl = uri => Number( uri.substr( uri.lastIndexOf( '/' ) + 1 ) );
-    const submission_links =
-      $( "#submissions a[href^='/admin/assignment_submissions']" );
-
-    const clone_link = submission_links.closest( "td" ).append(
-      ` | <a href="#" class="clone_and_open_submission">
-        <i class="fa fa-download" aria-hidden="true"></i>
-        Clone Assignment Locally
-      </a>`
-    );
-
-    clone_link
-      .find( '.clone_and_open_submission' )
-      .click( function getSubmissionIDandCall( e ) {
-        e.preventDefault();
-        const self = $( this );
-        const submission_id = idFromUrl(
-          self.closest( "td" ).find( "a[href^='/admin/assignment_submissions']" )[ 0 ].href
-        );
-
-        self.append( `
-          <i class='newline_hw_working fa fa-spin fa-spinner'></i>
-          ` );
-
-        triggerCloneEventForSubmissionID( submission_id, function() {
-          self.find( ".newline_hw_working" ).remove();
-        } );
-      } );
+    $( "#submissions a[href^='/admin/assignment_submissions']" ).closest( "td" ).each( function addLinks() {
+      const $el = $( this );
+      addCloneLinkForSubmissionTo(
+        $el,
+        idFromUrl( $el.find( "a[href^='/admin/assignment_submissions']" )[ 0 ].href ), {
+          success_class: "btn label label-complete-and-satisfactory",
+          fail_class: "btn label label-incomplete"
+        }
+      );
+    } );
   }
 
-  function updateUIOnSubmissionPage () {
-    const clone_link = $( ".edit_assignment_submission" ).first().append(
-      `
-      <a class="clone_and_open_submission btn btn-primary btn-sm">
-        Clone Assignment Locally
-      </a>
-      `
+
+  function updateUIOnSubmissionPage() {
+    addCloneLinkForSubmissionTo(
+      $( ".edit_assignment_submission" ).first(),
+      pageData.assignment_submission.id, {
+        success_class: "btn btn-primary btn-sm",
+        fail_class: "btn btn-danger btn-sm"
+      }
     );
+  }
 
-    clone_link
-      .find( '.clone_and_open_submission' )
-      .click( function getSubmissionIDandCall( e ) {
-        e.preventDefault();
-        const self = $( this );
+/**
+ * Adds a link to an $el that will trigger a triggerCloneEventForSubmissionID
+ * event for a submission_id when clicked.  If a submission_id cannot be cloned
+ * display a revelant message to the user.
+ *
+ * @param {jQuery Element} $el the element to append the relevant link
+ * to
+ * @param {integer} submission_id the submission_id that is to be passed to
+ * NewlineHW
+ * @param {object} options configuration options for the link (currently
+ * on success class and fail class)
+ */
+  function addCloneLinkForSubmissionTo( $el, submission_id, options ) {
+    options = ( typeof( options ) === "object" && options ) || {};
 
-        self.append( `
-          <i class='newline_hw_working fa fa-spin fa-spinner'></i>
-        ` );
-        triggerCloneEventForSubmissionID( pageData.assignment_submission.id, function() {
-          self.find( ".newline_hw_working" ).remove();
-        } );
-      } );
+    isSubmissionCloneable( submission_id, function handleIsSubmissionCloneable( resp ) {
+      if ( resp.data.cloneable ) {
+        const clone_link = $el.append(
+          `
+          <a class="clone_and_open_submission ${options.success_class}">
+            <i class="fa fa-download" aria-hidden="true"></i>
+            Clone Assignment Locally
+          </a>
+          `
+        );
+
+        clone_link
+          .find( '.clone_and_open_submission' )
+          .click( function getSubmissionIDandCall( e ) {
+            e.preventDefault();
+            const self = $( this );
+
+            self.append( `
+              <i class='newline_hw_working fa fa-spin fa-spinner'></i>
+            ` );
+
+            triggerCloneEventForSubmissionID( submission_id, function() {
+              self.find( ".newline_hw_working" ).remove();
+            } );
+          } );
+      } else {
+        $el.append(
+          `
+          <a target="_blank" href="${resp.data.submission_info.url}" class="${options.fail_class}">
+            Submitted link can't be cloned
+          </a>
+          `
+        );
+      }
+    } );
+
+
   }
 
   function detectNativeClient( callback ) {
@@ -147,6 +171,21 @@
         callback( res );
       } );
     }
+  }
+
+  function isSubmissionCloneable( submission_id, callback ) {
+    callback = ( typeof( callback ) === "function" && callback ) || function() {};
+    console.log( "Checking if submission ID is cloneable", submission_id );
+    chrome.runtime.sendMessage( {
+      event: "check_if_cloneable",
+      data: {
+        id: submission_id
+      }
+    }, function( response ) {
+      console.log( "From Background page", response );
+
+      callback( response );
+    } );
   }
 
   function triggerCloneEventForSubmissionID( submission_id, callback ) {
