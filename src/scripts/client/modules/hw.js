@@ -19,37 +19,35 @@
     }
 
     $( $ui ).on( 'showing', function() {
-      $ui.append( `
-        <i class='newline_hw_working fa fa-spin fa-spinner'></i>
-      ` );
+      $ui.append( `<i class='newline_hw_working fa fa-spin fa-spinner'></i>` );
 
-      detectNativeClient( function handleNativeClient( response ) {
-        addMainContent( $ui, response );
+      detectNativeClient( function handleNativeClient( resp ) {
+        addMainContent( $ui, resp );
       } );
     } );
 
   }
 
-  function addMainContent( $ui, response ) {
+  function addMainContent( $ui, resp ) {
     $ui
       .html( "" )
-      .append( `Newline HW ${response.status === "ok" ? 'detected' : 'not found'} ` );
+      .append( `Newline HW ${resp.status === "ok" ? 'detected' : 'not found'} ` );
 
-    if ( response.status === "ok" ) {
-      $ui.append( `Last Heartbeat at ${moment(response.message_at).fromNow()}` );
+    if ( resp.status === "ok" ) {
+      $ui.append( `Last Heartbeat at ${moment(resp.message_at).fromNow()}` );
       $ui.append( `<dl>` );
 
-      for(let i in response.data) {
-        if (response.data.hasOwnProperty(i)) {
-            $ui.append( `<dt>${i}</dt><dd>${response.data[i]}</dd>`);
+      for(let i in resp.data) {
+        if (resp.data.hasOwnProperty(i)) {
+            $ui.append( `<dt>${i}</dt><dd>${resp.data[i]}</dd>`);
         }
       }
       $ui.append( `</dl>` );
     } else {
       $ui
-        .append( `Last Error: ${response.message}` )
         .append(
-          `<a
+          `<br />
+          <a
             class="btn btn-primary btn-sm"
             target="_blank"
             href="https://github.com/TIYDC/newline-hw#installation">
@@ -61,8 +59,8 @@
   }
 
   function addCloneLinksToUi() {
-    detectNativeClient( function handleNativeClient( response ) {
-      if ( response.status === "ok" ) {
+    detectNativeClient( function handleNativeClient( resp ) {
+      if ( resp.status === "ok" ) {
         if ( pageData.assignment_submission ) {
           updateUIOnSubmissionPage();
         }
@@ -111,9 +109,7 @@
    * @param {object} options configuration options for the link (currently
    * on success class and fail class)
    */
-  function addCloneLinkForSubmissionTo( $el, submission_id, options ) {
-    options = ( typeof( options ) === "object" && options ) || {};
-
+  function addCloneLinkForSubmissionTo( $el, submission_id, options = {} ) {
     isSubmissionCloneable( submission_id, function handleIsSubmissionCloneable( resp ) {
       if (resp === "Timeout") {
         $el.append(
