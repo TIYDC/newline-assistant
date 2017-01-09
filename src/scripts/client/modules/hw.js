@@ -14,58 +14,65 @@
     $ui = $( elem );
     pageData = data;
 
-    detectNativeClient( function handleNativeClient( response ) {
-      addMainContent( $ui, response );
-      if ( response.status === "ok" ) {
-        console.log( "Native Client detected", response );
-        updateUIClientPresent( response );
-      } else {
-        noClientPresent( response );
-      }
+    if ( pageData.assignment || pageData.assignment_submission ) {
+      addCloneLinksToUi();
+    }
+
+    $( $ui ).on( 'showing', function() {
+      $ui.append( `
+        <i class='newline_hw_working fa fa-spin fa-spinner'></i>
+      ` );
+
+      detectNativeClient( function handleNativeClient( response ) {
+        addMainContent( $ui, response );
+      } );
     } );
+
   }
 
   function addMainContent( $ui, response ) {
     $ui
+      .html( "" )
       .append( `Newline HW ${response.status === "ok" ? 'detected' : 'not found'} ` );
 
     if ( response.status === "ok" ) {
-      $ui.append( `
-          <small>
-          Last Heartbeat at ${moment(response.data.message_at).fromNow()}
-          using ruby ${response.data.ruby_version}
-          using newline_hw ${response.data.version},
-          and
-          using newline_cli ${response.data.newline_cli_version}
-          </small>
-        ` );
+      $ui.append( `Last Heartbeat at ${moment(response.message_at).fromNow()}` );
+      $ui.append( `<dl>` );
+
+      for(let i in response.data) {
+        if (response.data.hasOwnProperty(i)) {
+            $ui.append( `<dt>${i}</dt><dd>${response.data[i]}</dd>`);
+        }
+      }
+      $ui.append( `</dl>` );
     } else {
-      $ui.append( `Last Error: ${response.message}` );
+      $ui
+        .append( `Last Error: ${response.message}` )
+        .append(
+          `<a
+            class="btn btn-primary btn-sm"
+            target="_blank"
+            href="https://github.com/TIYDC/newline-hw#installation">
+            Download Newline HW to clone homework locally!
+          </a>`
+        );
     }
 
   }
 
-  function updateUIClientPresent() {
-    if ( pageData.assignment_submission ) {
-      updateUIOnSubmissionPage();
-    }
-
-    if ( pageData.assignment ) {
-      updateUIOnAssignmentPage();
-    }
+  function addCloneLinksToUi() {
+    detectNativeClient( function handleNativeClient( response ) {
+      if ( response.status === "ok" ) {
+        if ( pageData.assignment_submission ) {
+          updateUIOnSubmissionPage();
+        }
+        if ( pageData.assignment ) {
+          updateUIOnAssignmentPage();
+        }
+      }
+    } );
   }
 
-  function noClientPresent() {
-    $ui
-      .append(
-        `<a
-          class="btn btn-primary btn-sm"
-          target="_blank"
-          href="https://github.com/TIYDC/newline-hw#installation">
-          Download Newline HW to clone homework locally!
-        </a>`
-      );
-  }
 
   function updateUIOnAssignmentPage() {
     const idFromUrl = uri => Number( uri.substr( uri.lastIndexOf( '/' ) + 1 ) );
@@ -92,22 +99,33 @@
     );
   }
 
-/**
- * Adds a link to an $el that will trigger a triggerCloneEventForSubmissionID
- * event for a submission_id when clicked.  If a submission_id cannot be cloned
- * display a revelant message to the user.
- *
- * @param {jQuery Element} $el the element to append the relevant link
- * to
- * @param {integer} submission_id the submission_id that is to be passed to
- * NewlineHW
- * @param {object} options configuration options for the link (currently
- * on success class and fail class)
- */
+  /**
+   * Adds a link to an $el that will trigger a triggerCloneEventForSubmissionID
+   * event for a submission_id when clicked.  If a submission_id cannot be cloned
+   * display a revelant message to the user.
+   *
+   * @param {jQuery Element} $el the element to append the relevant link
+   * to
+   * @param {integer} submission_id the submission_id that is to be passed to
+   * NewlineHW
+   * @param {object} options configuration options for the link (currently
+   * on success class and fail class)
+   */
   function addCloneLinkForSubmissionTo( $el, submission_id, options ) {
     options = ( typeof( options ) === "object" && options ) || {};
 
     isSubmissionCloneable( submission_id, function handleIsSubmissionCloneable( resp ) {
+      if (resp === "Timeout") {
+        $el.append(
+          `
+          <a class="clone_and_open_submission ${options.fail_class}">
+            <i class="fa fa-question" aria-hidden="true"></i>
+          </a>
+          `
+        );
+        return;
+      }
+
       if ( resp.data.cloneable ) {
         const clone_link = $el.append(
           `
@@ -142,35 +160,15 @@
         );
       }
     } );
-
-
   }
 
   function detectNativeClient( callback ) {
-    let client = {
-      present: false
-    };
-    try {
-      client = JSON.parse(
-        sessionStorage.getItem( 'newlineHwNativeClientPresent' )
-      );
-    } catch ( e ) {}
-
-    if ( client && client.present && client.data.status === "ok" ) {
-      callback( client.data );
-    } else {
-      chrome.runtime.sendMessage( {
-        event: "heartbeat",
-        data: {}
-      }, function handleBackgroundPageResponse( res ) {
-        sessionStorage.setItem( 'newlineHwNativeClientPresent', JSON.stringify( {
-          present: true,
-          data: res
-        } ) );
-
-        callback( res );
-      } );
-    }
+    chrome.runtime.sendMessage( {
+      event: "heartbeat",
+      data: {}
+    }, function handleBackgroundPageResponse( res ) {
+      callback( res );
+    } );
   }
 
   function isSubmissionCloneable( submission_id, callback ) {
