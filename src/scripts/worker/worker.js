@@ -63,7 +63,9 @@
 
     setTimeout(function killItem() {
       if (!item.complete) {
-        item.reject('Timeout');
+        item.reject(
+          { status: "fail", message: "Timeout communicating with newline_hw" }
+        );
         item = null;
       }
     }, 5000);

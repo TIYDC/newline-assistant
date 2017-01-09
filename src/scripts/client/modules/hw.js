@@ -111,17 +111,6 @@
    */
   function addCloneLinkForSubmissionTo( $el, submission_id, options = {} ) {
     isSubmissionCloneable( submission_id, function handleIsSubmissionCloneable( resp ) {
-      if ( resp === "Timeout" ) {
-        $el.append(
-          `
-          <a class="clone_and_open_submission ${options.fail_class}">
-            <i class="fa fa-question" aria-hidden="true"></i>
-          </a>
-          `
-        );
-        return;
-      }
-
       if ( resp.data.cloneable ) {
         const clone_link = $el.append(
           `
@@ -184,16 +173,24 @@
     }, callback );
   }
 
+  /**
+   * send json objects to the backgroup process for privledge esclation.
+   *
+   * @param  {object}   msg      event data to be sent to native client
+   * @param  {Function} callback optional callback with response for native client
+   */
   function sendMessageToBackgroundWorker( msg, callback ) {
     callback = ( typeof( callback ) === "function" && callback ) || function() {};
     chrome.runtime.sendMessage( msg, function( resp ) {
       console.log( "From Background page", resp );
 
-      if ( resp.status === "fail" ) {
+      // Handle native client error message / timeout
+      if ( resp && resp.status === "fail" ) {
         console.error( resp.message );
         tiy.showMessage( resp.message );
       }
 
+      // Handle failure to commuicate with background page
       if ( typeof resp === "undefined" ) {
         console.error( chrome.runtime.lastError );
         tiy.showMessage( chrome.runtime.lastError );
