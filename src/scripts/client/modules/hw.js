@@ -37,9 +37,9 @@
       $ui.append( `Last Heartbeat at ${moment(resp.message_at).fromNow()}` );
       $ui.append( `<dl>` );
 
-      for(let i in resp.data) {
-        if (resp.data.hasOwnProperty(i)) {
-            $ui.append( `<dt>${i}</dt><dd>${resp.data[i]}</dd>`);
+      for ( let i in resp.data ) {
+        if ( resp.data.hasOwnProperty( i ) ) {
+          $ui.append( `<dt>${i}</dt><dd>${resp.data[i]}</dd>` );
         }
       }
       $ui.append( `</dl>` );
@@ -111,7 +111,7 @@
    */
   function addCloneLinkForSubmissionTo( $el, submission_id, options = {} ) {
     isSubmissionCloneable( submission_id, function handleIsSubmissionCloneable( resp ) {
-      if (resp === "Timeout") {
+      if ( resp === "Timeout" ) {
         $el.append(
           `
           <a class="clone_and_open_submission ${options.fail_class}">
@@ -184,19 +184,19 @@
     }, callback );
   }
 
-  function sendMessageToBackgroundWorker( msg, callback ){
+  function sendMessageToBackgroundWorker( msg, callback ) {
     callback = ( typeof( callback ) === "function" && callback ) || function() {};
     chrome.runtime.sendMessage( msg, function( resp ) {
       console.log( "From Background page", resp );
 
       if ( resp.status === "fail" ) {
-        console.error(resp.message);
-        tiy.showMessage(resp.message);
+        console.error( resp.message );
+        tiy.showMessage( resp.message );
       }
 
       if ( typeof resp === "undefined" ) {
-        console.error(chrome.runtime.lastError);
-        tiy.showMessage(chrome.runtime.lastError);
+        console.error( chrome.runtime.lastError );
+        tiy.showMessage( chrome.runtime.lastError );
       }
 
       callback( resp );
