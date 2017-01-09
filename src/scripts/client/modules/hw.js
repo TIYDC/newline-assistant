@@ -160,41 +160,46 @@
   }
 
   function detectNativeClient( callback ) {
-    chrome.runtime.sendMessage( {
+    sendMessageToBackgroundWorker( {
       event: "heartbeat",
       data: {}
-    }, function handleBackgroundPageResponse( res ) {
-      callback( res );
-    } );
+    }, callback );
   }
 
   function isSubmissionCloneable( submission_id, callback ) {
-    callback = ( typeof( callback ) === "function" && callback ) || function() {};
-    console.log( "Checking if submission ID is cloneable", submission_id );
-    chrome.runtime.sendMessage( {
+    sendMessageToBackgroundWorker( {
       event: "check_if_cloneable",
       data: {
         id: submission_id
       }
-    }, function( response ) {
-      console.log( "From Background page", response );
-
-      callback( response );
-    } );
+    }, callback );
   }
 
   function triggerCloneEventForSubmissionID( submission_id, callback ) {
-    callback = ( typeof( callback ) === "function" && callback ) || function() {};
-    console.log( "Cloning submission ID", submission_id );
-    chrome.runtime.sendMessage( {
+    sendMessageToBackgroundWorker( {
       event: "clone_and_open_submission",
       data: {
         id: submission_id
       }
-    }, function( response ) {
-      console.log( "From Background page", response );
+    }, callback );
+  }
 
-      callback( response );
+  function sendMessageToBackgroundWorker( msg, callback ){
+    callback = ( typeof( callback ) === "function" && callback ) || function() {};
+    chrome.runtime.sendMessage( msg, function( resp ) {
+      console.log( "From Background page", resp );
+
+      if ( resp.status === "fail" ) {
+        console.error(resp.message);
+        tiy.showMessage(resp.message);
+      }
+
+      if ( typeof resp === "undefined" ) {
+        console.error(chrome.runtime.lastError);
+        tiy.showMessage(chrome.runtime.lastError);
+      }
+
+      callback( resp );
     } );
   }
 
