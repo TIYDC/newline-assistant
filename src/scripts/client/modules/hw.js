@@ -1,6 +1,8 @@
 ( function( tiy, moment ) {
   'use strict';
 
+  const HW_NO_CLIENT_TEMPLATE = 'templates/hw.html';
+
   let $ui = null;
   let pageData = {};
 
@@ -14,6 +16,7 @@
     $ui = $( elem );
     pageData = data;
 
+    // On relevant pages add links
     if ( pageData.assignment || pageData.assignment_submission ) {
       addCloneLinksToUi();
     }
@@ -25,13 +28,13 @@
         addMainContent( $ui, resp );
       } );
     } );
-
   }
+
 
   function addMainContent( $ui, resp ) {
     $ui
       .html( "" )
-      .append( `Newline HW ${resp.status === "ok" ? 'detected' : 'not found'} ` );
+      .append( `<h5>Newline HW ${resp.status === "ok" ? 'detected' : 'not found'}</h5>` );
 
     if ( resp.status === "ok" ) {
       $ui.append( `Last Heartbeat at ${moment(resp.message_at).fromNow()}` );
@@ -42,21 +45,15 @@
           $ui.append( `<dt>${i}</dt><dd>${resp.data[i]}</dd>` );
         }
       }
+
       $ui.append( `</dl>` );
     } else {
-      $ui
-        .append(
-          `<br />
-          <a
-            class="btn btn-primary btn-sm"
-            target="_blank"
-            href="https://github.com/TIYDC/newline-hw#installation">
-            Download Newline HW to clone homework locally!
-          </a>`
-        );
+      $.get( chrome.extension.getURL( HW_NO_CLIENT_TEMPLATE ) ).then( function( html ) {
+        $ui.append( html );
+      } );
     }
-
   }
+
 
   function addCloneLinksToUi() {
     detectNativeClient( function handleNativeClient( resp ) {
