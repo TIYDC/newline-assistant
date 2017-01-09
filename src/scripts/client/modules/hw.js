@@ -82,7 +82,7 @@
         $el,
         idFromUrl( $el.find( "a[href^='/admin/assignment_submissions']" )[ 0 ].href ), {
           success_class: "btn label label-complete-and-satisfactory",
-          fail_class: "btn label label-incomplete"
+          fail_class: "btn label label-external-link"
         }
       );
     } );
@@ -94,7 +94,7 @@
       $( ".edit_assignment_submission" ).first(),
       pageData.assignment_submission.id, {
         success_class: "btn btn-primary btn-sm",
-        fail_class: "btn btn-danger btn-sm"
+        fail_class: "btn btn-info btn-sm"
       }
     );
   }
@@ -154,7 +154,8 @@
         $el.append(
           `
           <a target="_blank" href="${resp.data.submission_info.url}" class="${options.fail_class}">
-            Submitted link can't be cloned
+            <i class="fa fa-external-link" aria-hidden="true"></i>
+            Go To
           </a>
           `
         );
