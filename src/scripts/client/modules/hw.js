@@ -79,8 +79,8 @@
       addCloneLinkForSubmissionTo(
         $el,
         idFromUrl( $el.find( "a[href^='/admin/assignment_submissions']" )[ 0 ].href ), {
-          success_class: "btn label label-complete-and-satisfactory",
-          fail_class: "btn label label-external-link"
+          success_class: "label label-complete-and-satisfactory",
+          fail_class: "label label-external-link"
         }
       );
     } );
