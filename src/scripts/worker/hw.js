@@ -20,7 +20,6 @@
       if (itemInQueue) {
 
         if (msg.status === "ok") {
-          itemInQueue.complete = true;
           itemInQueue.resolve(msg);
         } else  {
           itemInQueue.reject(msg);
