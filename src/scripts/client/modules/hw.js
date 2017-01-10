@@ -1,7 +1,8 @@
 ( function( tiy, moment ) {
   'use strict';
 
-  const HW_NO_CLIENT_TEMPLATE = 'templates/hw.html';
+  const HW_NO_CLIENT_TEMPLATE = 'templates/hw_no_client.html';
+  const HW_CLIENT_TEMPLATE = 'templates/hw_client.html';
 
   let $ui = null;
   let pageData = {};
@@ -46,14 +47,28 @@
       .append( `<h5>Newline HW ${resp.status === "ok" ? 'detected' : 'not found'}</h5>` );
 
     if ( resp.status === "ok" ) {
-      $ui.append( `Last Heartbeat at ${moment(resp.message_at).fromNow()}` );
-      $ui.append( `<dl>` );
+      $.get( chrome.extension.getURL( HW_CLIENT_TEMPLATE ) ).then( function( html ) {
+        $ui.append( html );
+        const $diag = $ui.find("#diagnostic");
+        $diag.append( `Last Heartbeat at ${moment(resp.message_at).fromNow()}` );
 
-      Object.keys( resp.data ).forEach( function showData( key ) {
-        $ui.append( `<dt>${key}</dt><dd>${resp.data[key]}</dd>` );
+        function printDiag(data) {
+          let html = "";
+            html += `<dl>`;
+            Object.keys( data ).forEach( function showData( key ) {
+              if (typeof( data[key] ) === "object" ) {
+                html += printDiag(data[key]);
+              } else {
+                html += `<dt>${key}</dt><dd>${data[key]}</dd>`;
+              }
+            });
+            html += `</dl>`;
+            return html;
+        }
+
+        $diag.append(printDiag(resp.data));
       } );
 
-      $ui.append( `</dl>` );
     } else {
       $.get( chrome.extension.getURL( HW_NO_CLIENT_TEMPLATE ) ).then( function( html ) {
         $ui.append( html );
