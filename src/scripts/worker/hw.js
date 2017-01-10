@@ -1,14 +1,8 @@
-(function(tiy){
+(function(){
   'use strict';
   const hostName = "com.theironyard.newlinecli.hw";
   let connection;
   let pendingPromises = [];
-
-  tiy.worker.connect = connect;
-  tiy.worker.onNativeMessage = onNativeMessage;
-  tiy.worker.sendNativeMessage = sendNativeMessage;
-  tiy.worker.onDisconnected = onDisconnected;
-  tiy.worker.pendingPromises = pendingPromises;
 
   function connect() {
     console.log("Connecting to native messaging host", hostName);
@@ -95,7 +89,4 @@
     return true;
   });
 
-  window.tiy = tiy;
-
-
-})(window.tiy || { worker: {} });
+})();
