@@ -133,7 +133,7 @@
   function onDisconnected() {
     console.error("Failed to connect: " + chrome.runtime.lastError.message);
     pendingPromises.forEach(function closePromise(item) {
-      item.reject(chrome.runtime.lastError.message);
+      item.reject({ status: "fail", message: chrome.runtime.lastError.message });
     });
     pendingPromises = [];
     connection = null;
