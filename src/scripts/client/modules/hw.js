@@ -40,9 +40,9 @@
       $ui.append( `Last Heartbeat at ${moment(resp.message_at).fromNow()}` );
       $ui.append( `<dl>` );
 
-      Object.keys(resp.data).forEach(function showData(key) {
+      Object.keys( resp.data ).forEach( function showData( key ) {
         $ui.append( `<dt>${key}</dt><dd>${resp.data[key]}</dd>` );
-      });
+      } );
 
       $ui.append( `</dl>` );
     } else {
