@@ -87,7 +87,10 @@
    * i.e., /admin/assignments/123
    */
   function updateUIOnAssignmentPage() {
-    const idFromUrl = uri => Number( uri.substr( uri.lastIndexOf( '/' ) + 1 ) );
+    function idFromUrl(uri) {
+      return Number(uri.substr(uri.lastIndexOf('/') + 1));
+    }
+
     $( "#submissions a[href^='/admin/assignment_submissions']" ).closest( "td" ).each( function addLinks() {
       const $el = $( this );
       addCloneLinkForSubmissionTo(
