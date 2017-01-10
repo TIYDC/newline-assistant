@@ -14,9 +14,9 @@
   function onNativeMessage(msg) {
     console.log("Message from host", msg);
     if (msg.message_at) {
-      let findByMessageId = function (el) { return msg.message_at === el.message_at; };
-      let itemInQueue = pendingPromises.find(findByMessageId);
-      let itemIndex = pendingPromises.findIndex(findByMessageId);
+      const findByMessageId = function (el) { return msg.message_at === el.message_at; };
+      const itemInQueue = pendingPromises.find(findByMessageId);
+      const itemIndex = pendingPromises.findIndex(findByMessageId);
       if (itemInQueue) {
 
         if (msg.status === "ok") {
