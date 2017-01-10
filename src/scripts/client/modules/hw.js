@@ -84,7 +84,7 @@
 
   function updateUIOnSubmissionPage() {
     addCloneLinkForSubmissionTo(
-      $( ".edit_assignment_submission" ).first(),
+      $( '.edit_assignment_submission:eq(0)' ),
       pageData.assignment_submission.id, {
         success_class: "btn btn-primary btn-sm",
         fail_class: "btn btn-info btn-sm"
