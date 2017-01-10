@@ -30,6 +30,23 @@ The gradebook builds on the awesome work of @jwo and @matthiasak. Each student y
 
 Data is cached in localStorage so as not to DDoS TIYO (too much). Clicking the "Refresh Grades" button will scrape the site once again and store the new data.
 
+### Homework
+
+The Homework module builds upon the inspiration from @jah2488.  It allows communication to an authorized ruby process running on your computer to rapidly clone and setup git based projects on your computer.  This allows for easy cloning of PR's, Git Repos, Gists, and various other git related links.  For full documentation please read more about the underlying tool newline_hw [here](https://github.com/TIYDC/newline_hw#newlinehw).
+
+It depends on
+
+1. ruby 2.3.0
+2. [newline_cli](https://github.com/theironyard/newline_cli)
+3. [newline_hw](https://github.com/tiydc/newline_hw)
+
+#### Troubleshooting
+Tailing the message's passed to `newline_hw`
+`tail -f ~/Library/Logs/newline_hw/newlinehw.log`
+
+Get a copy of the logs in your clipboard
+`cat ~/Library/Logs/newline_hw/newlinehw.log | pbcopy`
+
 ### Search
 
 While on a Path you can search all text in any lesson or assignment. Click on the search icon in the top right (magnifying glass) to open the UI. If you have not yet built the search index for that path, you will want to do so (you can tell because the UI will read: `(Index created (never))`). Click on the "Refresh Index" button to start.
