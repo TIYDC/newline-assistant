@@ -98,6 +98,8 @@
             data = {
                 user: null,
                 path: null,
+                assignment_submission: null,
+                assignment: null,
                 content: null,
                 group: null,
                 students: []
@@ -111,6 +113,20 @@
             data.path = {
                 id: Number(pathname[3]),
                 title: $('.content .breadcrumb li:eq(1)').text(),
+                onPage: true
+            };
+        }
+
+        if (/\/admin\/assignment_submissions\/[0-9]+/.test(window.location.pathname)) {
+            data.assignment_submission = {
+                id: Number(pathname[3]),
+                onPage: true
+            };
+        }
+
+        if (/\/admin\/assignments\/[0-9]+/.test(window.location.pathname)) {
+            data.assignment = {
+                id: Number(pathname[3]),
                 onPage: true
             };
         }
