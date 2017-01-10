@@ -40,11 +40,9 @@
       $ui.append( `Last Heartbeat at ${moment(resp.message_at).fromNow()}` );
       $ui.append( `<dl>` );
 
-      for ( let i in resp.data ) {
-        if ( resp.data.hasOwnProperty( i ) ) {
-          $ui.append( `<dt>${i}</dt><dd>${resp.data[i]}</dd>` );
-        }
-      }
+      Object.keys(resp.data).forEach(function showData(key) {
+        $ui.append( `<dt>${key}</dt><dd>${resp.data[key]}</dd>` );
+      });
 
       $ui.append( `</dl>` );
     } else {
