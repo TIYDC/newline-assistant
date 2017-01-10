@@ -27,6 +27,8 @@
 
         itemInQueue.complete = true;
         pendingPromises.splice(itemIndex, 1);
+      } else {
+        console.error("Message does not have a message_at. callback cannot be completed");
       }
     }
   }
