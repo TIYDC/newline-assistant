@@ -107,7 +107,7 @@
   function addCloneLinkForSubmissionTo( $el, submission_id, options = {} ) {
     isSubmissionCloneable( submission_id, function handleIsSubmissionCloneable( resp ) {
       if ( resp.data.cloneable ) {
-        const clone_link = $el.append(
+        $el.append(
           `
           <a class="clone_and_open_submission ${options.success_class}">
             <i class="fa fa-download" aria-hidden="true"></i>
@@ -116,20 +116,18 @@
           `
         );
 
-        clone_link
-          .find( '.clone_and_open_submission' )
-          .click( function getSubmissionIDandCall( e ) {
-            e.preventDefault();
-            const self = $( this );
+        $el.on( "click", ".clone_and_open_submission", function getSubmissionIDandCall( e ) {
+          e.preventDefault();
+          const self = $( this );
 
-            self.append( `
+          self.append( `
               <i class='newline_hw_working fa fa-spin fa-spinner'></i>
             ` );
 
-            triggerCloneEventForSubmissionID( submission_id, function() {
-              self.find( ".newline_hw_working" ).remove();
-            } );
+          triggerCloneEventForSubmissionID( submission_id, function() {
+            self.find( ".newline_hw_working" ).remove();
           } );
+        } );
       } else {
         $el.append(
           `
