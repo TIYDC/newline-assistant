@@ -12,6 +12,13 @@
     render: main
   } );
 
+
+  /**
+   * Entrypoint from tiyo-assistant
+   * @param  {Object} data page related data
+   * @param  {Element} elem jQuery Element
+   * @return {void}
+   */
   function main( data, elem ) {
     $ui = $( elem );
     pageData = data;
@@ -25,13 +32,15 @@
       $ui.append( `<i class='newline_hw_working fa fa-spin fa-spinner'></i>` );
 
       detectNativeClient( function handleNativeClient( resp ) {
-        addMainContent( $ui, resp );
+        addDiagnosticUi( $ui, resp );
       } );
     } );
   }
 
-
-  function addMainContent( $ui, resp ) {
+  /**
+   * Build the UI for diagonsitc and install help
+   */
+  function addDiagnosticUi( $ui, resp ) {
     $ui
       .html( "" )
       .append( `<h5>Newline HW ${resp.status === "ok" ? 'detected' : 'not found'}</h5>` );
@@ -53,6 +62,12 @@
   }
 
 
+  /**
+   * Primary entry point for working UI
+   *
+   * While on relvent pages will detect if a native client is present and call
+   * the respective setup functions if it is.
+   */
   function addCloneLinksToUi() {
     detectNativeClient( function handleNativeClient( resp ) {
       if ( resp.status === "ok" ) {
@@ -66,7 +81,11 @@
     } );
   }
 
-
+  /**
+   * Add ui to a assignment page
+   *
+   * i.e., /admin/assignments/123
+   */
   function updateUIOnAssignmentPage() {
     const idFromUrl = uri => Number( uri.substr( uri.lastIndexOf( '/' ) + 1 ) );
     $( "#submissions a[href^='/admin/assignment_submissions']" ).closest( "td" ).each( function addLinks() {
@@ -81,7 +100,11 @@
     } );
   }
 
-
+  /**
+   * Add ui to a submission page
+   *
+   * i.e., /admin/assignment_submissions/123
+   */
   function updateUIOnSubmissionPage() {
     addCloneLinkForSubmissionTo(
       $( '.edit_assignment_submission:eq(0)' ),
@@ -141,6 +164,14 @@
     } );
   }
 
+
+  /**
+   * send event a heartbeat to background worker to determine if it is installed
+   * callback is passed various diagnostic attributes determine by newline_hw
+   *
+   * @param  {Number}   submission_id the newline assignment_submission id
+   * @param  {Function} callback      function to be called when message has been recieved
+   */
   function detectNativeClient( callback ) {
     sendMessageToBackgroundWorker( {
       event: "heartbeat",
@@ -148,6 +179,14 @@
     }, callback );
   }
 
+
+  /**
+   * send event to background worker to run aganist the Setup class, to determine if
+   * the submitted URL is "cloneable" aka a PR, or a git link.
+   *
+   * @param  {Number}   submission_id the newline assignment_submission id
+   * @param  {Function} callback      function to be called when message has been recieved
+   */
   function isSubmissionCloneable( submission_id, callback ) {
     sendMessageToBackgroundWorker( {
       event: "check_if_cloneable",
@@ -157,6 +196,14 @@
     }, callback );
   }
 
+
+  /**
+   * send event to background worker to trigger applescript to open and run
+   * hw command for the submission_id
+   *
+   * @param  {Number}   submission_id the newline assignment_submission id
+   * @param  {Function} callback      function to be called when message has been recieved
+   */
   function triggerCloneEventForSubmissionID( submission_id, callback ) {
     sendMessageToBackgroundWorker( {
       event: "clone_and_open_submission",
