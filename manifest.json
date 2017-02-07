@@ -1,11 +1,11 @@
 {
   "manifest_version": 2,
   "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAolJZzJpB/MWJtK29b9pvyFL7L9ecJYX2YguQGhxWsCVmTpyTsiLKlnhgTaq9m435uRjIGArbbL8qofL2eWnddvuQBTo76jYkZaKGa0w94ADlPExhr1Ukum1mwQTiOOyBHmH1LsZR2Hnl56KjBFn2/lYQiqm1L/zrNqskQ3nkPSIoA6AxuGqgil8akLVjWtycHXHjdTKzIa1ejp0xr+lK8O5+FqQVdCclOiYJd7HTwtii90M6Zo1sqiWylXVHBm1rin7P6B0qal2HXxdLIN1jHgyn6jXAWKiS8lxp/3RV8F2bqcE9lv7Wlb7tSv665goFiDcEl3bdNgdBXxJVR5JLfwIDAQAB",
-  "name": "TIYO Assistant",
-  "description": "An in-page assistant for instructors using The Iron Yard Online",
+  "name": "Newline Assistant",
+  "description": "An in-page assistant for instructors using Newline",
   "version": "1.5.0",
   "icons": {
-    "128": "TIY-logo-thumb.jpg"
+    "128": "newline-logo-touch.png"
   },
   "background": {
       "scripts": ["tiyo-assistant-worker.js"],
@@ -21,7 +21,7 @@
   ],
   "content_scripts": [
     {
-      "matches": ["https://online.theironyard.com/*"],
+      "matches": ["https://newline.theironyard.com/*"],
       "js" : [
         "vendor/jquery-2.2.3.js",
         "vendor/moment.2.13.0.min.js",

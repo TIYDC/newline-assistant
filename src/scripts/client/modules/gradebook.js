@@ -126,7 +126,7 @@
 
 
     function getGradebook( sessionData, $el ) {
-        console.info( "DDOSsing  TIYO for path: ", sessionData.path.id );
+        console.info( "DDOSsing Newline for path: ", sessionData.path.id );
 
         $( '#generate-score-card' ).text( "Processing" ).attr( "disabled", true );
 
@@ -268,7 +268,7 @@
     }
 
     function getPathContent(path) {
-      const pathURI = id => `https://online.theironyard.com/admin/paths/${ id }`;
+      const pathURI = id => `https://newline.theironyard.com/admin/paths/${ id }`;
 
       return new Promise( ( res, rej ) => {
         if (/\/admin\/paths\/[0-9]+/.test(window.location.pathname)) {
@@ -327,7 +327,7 @@
     }
 
     function scrape( sessionData, callback ) {
-        const userURI = id => `https://online.theironyard.com/admin/users/${id}`;
+        const userURI = id => `https://newline.theironyard.com/admin/users/${id}`;
 
         function scrapeStudentPage( students, assignments, url, html ) {
             let studentPage = document.createElement( 'html' );

@@ -21,7 +21,7 @@ module.exports = function(grunt) {
             meta: {
                 files: [
                     { expand: true, src: ['manifest.json', 'LICENSE', 'README.md'], dest: 'build/' },
-                    { src: ['TIY-logo-thumb.jpg'], dest: 'build/' }
+                    { src: ['newline-logo-touch.png'], dest: 'build/' }
                 ]
             }
         },
