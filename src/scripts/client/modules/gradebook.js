@@ -49,7 +49,7 @@
         'Retracted'
     ];
 
-    const PARSING_TIME_FORMAT = "MMM DD, YYYY hh:mm A";
+    const PARSING_TIME_FORMAT = 'MMM DD, YYYY hh:mm A';
     const slice = c => [].slice.call( c );
     const qs = ( el, s ) => el.querySelector( s );
     const qsa = ( el, s ) => slice( el.querySelectorAll( s ) );
@@ -136,9 +136,9 @@
                 buildUI( sessionData, $el, gradebook );
             } );
         } catch ( e ) {
-            console.warn( "it blewup", e );
+            console.warn( e );
             // Wrap in try catch to show UI to user that something went wrong ( user permissions? )
-            $el.find( '.tiyo-assistant-notice' ).text( 'There was a problem getting all the data for this gradebooks, do you own this path?!' );
+            $el.text( 'There was a problem getting all the data for this gradebooks, do you own this path?!' );
         }
     }
 
@@ -186,8 +186,8 @@
 
     function buildAssignmentsHeader( assignments ) {
         const row = $( '<tr>' );
-        row.append( $( '<th>' ).append( "Student" ) );
-        row.append( $( '<th>' ).append( "Grade" ) );
+        row.append( $( '<th>' ).append( 'Student' ) );
+        row.append( $( '<th>' ).append( 'Grade' ) );
 
         for ( let assignment of assignments ) {
             row.append( `
@@ -272,13 +272,13 @@
 
       return new Promise( ( res, rej ) => {
         if (/\/admin\/paths\/[0-9]+/.test(window.location.pathname)) {
-          path.content = scrapePathContent(document)
+          path.content = scrapePathContent(document);
           res(path);
         } else {
           $.get( pathURI( path.id ) ).then( html => {
             var dom = document.createElement( 'html' );
             dom.innerHTML = html;
-            path.content = scrapePathContent(dom)
+            path.content = scrapePathContent(dom);
             res( path );
           } ).fail( err => rej(err));
         }
@@ -297,11 +297,11 @@
         let gid = x.getAttribute('data-id');
 
         if (gid) {
-          let title = qs( x, "a.text-body" ).innerText;
-          let href = qs( x, "a.text-body" ).getAttribute('href');
-          let hidden = qs( x, "#hidden-state, #unit-hidden-state" ).getAttribute("checked");
-          let type = gid.split("/")[3]
-          let id = gid.split("/")[4]
+          let title = qs( x, 'a.text-body' ).innerText;
+          let href = qs( x, 'a.text-body' ).getAttribute('href');
+          let hidden = qs( x, '#hidden-state, #unit-hidden-state' ).getAttribute('checked');
+          let type = gid.split('/')[3];
+          let id = gid.split('/')[4];
 
           let content = {
             id: Number(id),
@@ -322,7 +322,7 @@
           }
         }
       } );
-      console.log("Path Content:", allContent);
+      console.log('Path Content:', allContent);
       return allContent;
     }
 
@@ -373,10 +373,13 @@
                       }
                   }
                 } else {
-                  console.log("Submission from other path", submission, students[ studentId ])
+                  console.log('Submission from other path', submission, students[ studentId ]);
                 }
             } );
 
+        }
+        if (sessionData.students.length === 0) {
+          throw new Error('no students');
         }
         Promise.all( [getPathContent(sessionData.path)] ).then( ([pathWithContent]) => {
           sessionData.path = pathWithContent;

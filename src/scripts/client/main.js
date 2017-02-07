@@ -81,11 +81,11 @@
     function getUser() {
         try {
             return  JSON.parse(
-                $( "#IntercomSettingsScriptTag" )
+                $( '#IntercomSettingsScriptTag' )
                 .text()
-                .split(";")[0]
-                .replace("window.intercomSettings =", "")
-                .replace(";", "")
+                .split(';')[0]
+                .replace('window.intercomSettings =', '')
+                .replace(';', '')
                 .trim()
             );
         } catch (e) {
@@ -163,7 +163,9 @@
                 id: Number(group.attr('href').match(/\/([0-9]+)/)[1])
             };
 
-            p = $.get(group.attr('href')).then(function(html) {
+            p = new Promise(
+              function(res) {
+                $.get(group.attr('href')).then(function(html) {
                 let students = $(html).find('#students tr td:first-child a');
                 students.each(function() {
                     let studentElem = $(this).find('.profile-placeholder-medium, img').remove().end();
@@ -172,7 +174,11 @@
                         name: studentElem.text()
                     });
                 });
-                return data;
+                res(data);
+              }, function() {
+                console.log( 'Group Missing or you do not have access.' );
+                res(data);
+              });
             });
         } else {
             p = Promise.resolve(data);
