@@ -4,7 +4,7 @@
     const INDEX_ITEM = 'tiyo-search-index';
     const TAG_KEY = 'tiyo-search-tags';
     const TEMPLATE = 'templates/search.html';
-    const SCRAPE_BASE = 'https://online.theironyard.com';
+    const SCRAPE_BASE = 'https://newline.theironyard.com';
     const FILLERS = /\b(an|and|are(n\'t)?|as|at|be|but|by|do(es)?(n\'t)?|for|from|if|in|into|is(n\'t)?|it\'?s?|no|none|not|of|on|or|such|that|the|theirs?|then|there(\'s)?|these|they|this|to|us|was|we|will|with|won\'t|you\'?r?e?)\b/g;
     const TAG_WEIGHT = 10;
 
@@ -327,7 +327,7 @@
             .catch(function(err) {
                 console.warn('Problem getting content index', err);
                 $ui.find('.tiyo-assistant-search-refresh').attr('disabled', false);
-                tiy.showMessage('There was a problem building the index, please try again (TIYO throws 500 errors sometimes)!');
+                tiy.showMessage('There was a problem building the index, please try again (Newline throws 500 errors sometimes)!');
             });
     }
 

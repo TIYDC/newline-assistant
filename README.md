@@ -1,6 +1,6 @@
-# TIYO Assistant (TA)
+# The Newline Assistant (TA)
 
-This is a chrome extension to assist with The Iron Yard Online for instructors. Think of it as your digital TA.
+This is a chrome extension to assist with The Iron Yard's Newline for instructors. Think of it as your digital TA.
 
 * [Using this extension](#using-this-extension)
   * [Install It](#install-it)
@@ -16,19 +16,19 @@ This is a chrome extension to assist with The Iron Yard Online for instructors. 
 
 Head to the (unlisted) entry in the [Chrome Web Store](https://chrome.google.com/webstore/detail/tiyo-assistant/fnhanbdccpjnnoohoppkeejljjljihcc?authuser=0) add click the "Add to Chrome" button!
 
-Once installed, just head to [TIYO](https://online.theironyard.com), you'll have some new icons in the top-right corner that will let you access the features below...
+Once installed, just head to [Newline](https://newline.theironyard.com), you'll have some new icons in the top-right corner that will let you access the features below...
 
 ### Gradebook
 
-1. Go to a Path of yours in TIYO
+1. Go to a Path of yours in Newline
 1. Some new icons will appear in the top right
 1. Click on the one that looks like a book
-1. (Possibly wait a while for the gradebook to scrape TIYO)
+1. (Possibly wait a while for the gradebook to scrape Newline)
 1. Enjoy!
 
 The gradebook builds on the awesome work of @jwo and @matthiasak. Each student your path is assigned to will appear in the table along with their "grade" as determined by assignments submitted. Each assignment will be in the top header and each cell will indicate (with a color and letter) the latest status of that submission. You can click on a student's name to view their profile, an assignment header to view that assignment, or a submission cell to view that submission.
 
-Data is cached in localStorage so as not to DDoS TIYO (too much). Clicking the "Refresh Grades" button will scrape the site once again and store the new data.
+Data is cached in localStorage so as not to DDoS Newline (too much). Clicking the "Refresh Grades" button will scrape the site once again and store the new data.
 
 ### Homework
 
@@ -51,7 +51,7 @@ Get a copy of the logs in your clipboard
 
 While on a Path you can search all text in any lesson or assignment. Click on the search icon in the top right (magnifying glass) to open the UI. If you have not yet built the search index for that path, you will want to do so (you can tell because the UI will read: `(Index created (never))`). Click on the "Refresh Index" button to start.
 
-> _Note: TIYO likes to throw 500 errors sometimes. Even one of these during the re-indexing means a bad index, and no data will be stored. You may need to run the indexing script multiple times._
+> _Note: Newline likes to throw 500 errors sometimes. Even one of these during the re-indexing means a bad index, and no data will be stored. You may need to run the indexing script multiple times._
 
 Once the index is built, simply type you search query and hit enter. The results will appear immediately below the search box and will link to the pieces of content that query appears in.
 
@@ -81,7 +81,7 @@ The instructor may also edit these notes on the individual content edit page by 
 
 #### Sharing Notes
 
-Since the data for instructor notes is only stored in `localStorage` (for now) if an instructor wants to share notes with others - or just among two machines - they would have to export, and then import, the data. To do so, open the instructor notes module UI using the icon in the top right of TIYO, then click on the "Export JSON" button. This will save a JSON file to your computer which you can then share with others.
+Since the data for instructor notes is only stored in `localStorage` (for now) if an instructor wants to share notes with others - or just among two machines - they would have to export, and then import, the data. To do so, open the instructor notes module UI using the icon in the top right of Newline, then click on the "Export JSON" button. This will save a JSON file to your computer which you can then share with others.
 
 To import instructor notes simply open the UI, select the JSON file on your machine (the one that was exported), and click on the "Import JSON" button. Note that the imported notes will be _merged_ with any you already have. That means that the extension will _never overwrite_ your existing notes. If you already have a note for a given content piece then the extension will add the imported notes under your own.
 
