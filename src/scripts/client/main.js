@@ -81,11 +81,11 @@
     function getUser() {
         try {
             return  JSON.parse(
-                $( "#IntercomSettingsScriptTag" )
+                $( '#IntercomSettingsScriptTag' )
                 .text()
-                .split(";")[0]
-                .replace("window.intercomSettings =", "")
-                .replace(";", "")
+                .split(';')[0]
+                .replace('window.intercomSettings =', '')
+                .replace(';', '')
                 .trim()
             );
         } catch (e) {
@@ -176,7 +176,7 @@
                 });
                 res(data);
               }, function() {
-                console.log( "Group Missing or you do not have access." );
+                console.log( 'Group Missing or you do not have access.' );
                 res(data);
               });
             });
