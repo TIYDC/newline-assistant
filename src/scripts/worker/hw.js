@@ -118,7 +118,7 @@
         );
         item = null;
       }
-    }, 5000);
+    }, 15000);
 
     pendingPromises.push(item);
     return promise;

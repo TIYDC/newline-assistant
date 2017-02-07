@@ -250,8 +250,11 @@
 
       // Handle failure to commuicate with background page
       if ( typeof resp === "undefined" ) {
-        console.error( chrome.runtime.lastError );
-        tiy.showMessage( chrome.runtime.lastError );
+        console.error( 'Newline Assistant -> newline_hw', chrome.runtime.lastError );
+        // Catch errors if newline_hw is just not there otherwise show.
+        if (chrome.runtime.lastError !== 'Specified native messaging host not found.') {
+          tiy.showMessage( chrome.runtime.lastError );
+        }
       }
 
       callback( resp );
