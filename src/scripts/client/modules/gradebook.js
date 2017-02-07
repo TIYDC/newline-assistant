@@ -136,9 +136,9 @@
                 buildUI( sessionData, $el, gradebook );
             } );
         } catch ( e ) {
-            console.warn( "it blewup", e );
+            console.warn( e );
             // Wrap in try catch to show UI to user that something went wrong ( user permissions? )
-            $el.find( '.tiyo-assistant-notice' ).text( 'There was a problem getting all the data for this gradebooks, do you own this path?!' );
+            $el.text( 'There was a problem getting all the data for this gradebooks, do you own this path?!' );
         }
     }
 
@@ -377,6 +377,9 @@
                 }
             } );
 
+        }
+        if (sessionData.students.length === 0) {
+          throw new Error('no students');
         }
         Promise.all( [getPathContent(sessionData.path)] ).then( ([pathWithContent]) => {
           sessionData.path = pathWithContent;
