@@ -3,7 +3,7 @@
   "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAolJZzJpB/MWJtK29b9pvyFL7L9ecJYX2YguQGhxWsCVmTpyTsiLKlnhgTaq9m435uRjIGArbbL8qofL2eWnddvuQBTo76jYkZaKGa0w94ADlPExhr1Ukum1mwQTiOOyBHmH1LsZR2Hnl56KjBFn2/lYQiqm1L/zrNqskQ3nkPSIoA6AxuGqgil8akLVjWtycHXHjdTKzIa1ejp0xr+lK8O5+FqQVdCclOiYJd7HTwtii90M6Zo1sqiWylXVHBm1rin7P6B0qal2HXxdLIN1jHgyn6jXAWKiS8lxp/3RV8F2bqcE9lv7Wlb7tSv665goFiDcEl3bdNgdBXxJVR5JLfwIDAQAB",
   "name": "Newline Assistant",
   "description": "An in-page assistant for instructors using Newline",
-  "version": "1.5.0",
+  "version": "1.5.1",
   "icons": {
     "128": "newline-logo-touch.png"
   },
