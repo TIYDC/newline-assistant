@@ -24,6 +24,14 @@
     $ui = $( elem );
     pageData = data;
 
+    if (/^\/admin$/.test(window.location.pathname)){
+      detectNativeClient( function handleNativeClient( resp ) {
+        if ( resp.status === "ok" ) {
+          updateUIforTable("table");
+        }
+      } );
+    }
+
     // On relevant pages add links
     if ( pageData.assignment || pageData.assignment_submission ) {
       addCloneLinksToUi();
@@ -90,7 +98,7 @@
           updateUIOnSubmissionPage();
         }
         if ( pageData.assignment ) {
-          updateUIOnAssignmentPage();
+          updateUIforTable("#submissions");
         }
       }
     } );
@@ -101,12 +109,12 @@
    *
    * i.e., /admin/assignments/123
    */
-  function updateUIOnAssignmentPage() {
+  function updateUIforTable(selector) {
     function idFromUrl(uri) {
       return Number(uri.substr(uri.lastIndexOf('/') + 1));
     }
 
-    $( "#submissions a[href^='/admin/assignment_submissions']" ).closest( "td" ).each( function addLinks() {
+    $( `${selector} a[href^='/admin/assignment_submissions']` ).closest( "td" ).each( function addLinks() {
       const $el = $( this );
       addCloneLinkForSubmissionTo(
         $el,
