@@ -157,16 +157,16 @@
       .find('thead')
       .append(buildAssignmentsHeader(assignments));
 
-    const orderedStudents = Object.keys(students).sort();
-    for (const studentId of orderedStudents) {
             // Never display the instructor in the gradebook
-      if (sessionData.user.user_id.toString() === studentId) {
-        continue;
-      }
+    const onlyStudents = students
+      .filter(s => sessionData.user.user_id !== s.id)
+      .sort((a, b) => parseInt(b.percentage) - parseInt(a.percentage));
+    console.log('onlyStudents', onlyStudents);
+    
 
-      const student = students[studentId];
+    onlyStudents.forEach((student) => {
       $table.append(buildStudentRow(student, assignments));
-    }
+    });
 
     $el.find('#path-title').html(
           `<a href='/admin/paths/${sessionData.path.id}'>
