@@ -157,7 +157,7 @@
       .find('thead')
       .append(buildAssignmentsHeader(assignments));
 
-            // Never display the instructor in the gradebook
+    // Never display the instructor in the gradebook
     const onlyStudents = students
       .filter(s => sessionData.user.user_id !== s.id)
       .sort((a, b) => parseInt(b.percentage) - parseInt(a.percentage));
@@ -216,14 +216,14 @@
       if (submission) {
         const gradeClass = SHORT_GRADE_NAMES[submission.status].toLowerCase();
         studentRow.append(
-                    `
-                  <td class='grade ${gradeClass}' date-tooltip='${assignment.title}' >
-                    <a href='${submission.href}' title='${assignment.title}' target='blank' >
-                      ${SHORT_GRADE_NAMES[submission.status]}
-                    </a>
-                  </td>
-                  `
-                );
+          `
+          <td class='grade ${gradeClass}' date-tooltip='${assignment.title}' >
+            <a href='${submission.href}' title='${assignment.title}' target='blank' >
+              ${SHORT_GRADE_NAMES[submission.status]}
+            </a>
+          </td>
+          `
+          );
       } else {
         studentRow.append('<td></td>');
       }
@@ -244,9 +244,7 @@
       const student = students[studentName];
 
       const submissions = Object.keys(student.submissions);
-      const okCount = submissions.filter((assignmentId) => {
-        return OK_GRADES.includes(student.submissions[assignmentId].status);
-      });
+      const okCount = submissions.filter((id) => OK_GRADES.includes(student.submissions[id].status));
       const grade = (okCount.length / assignments.length) * 100;
       student.percentage = grade.toFixed(0);
       return student;
@@ -260,14 +258,14 @@
       constructor(data) {
         // Build an object that has the exposed properties of the parent content while adding functionality
         // TODO: This seems like something that is common, better way?
-        Object.keys(data).forEach(k => this[k] = data[k]);
+        Object.keys(data).forEach((k) => { this[k] = data[k]; });
         this.href = `/admin/${this.type.toLowerCase()}/${this.id}`;
         this.first_submission_at = null;
       }
     }
 
     return new Promise((res, rej) => {
-      const flatten = a => Array.isArray(a) ? [].concat(...a.map(flatten)) : a;
+      const flatten = (a) => Array.isArray(a) ? [].concat(...a.map(flatten)) : a;
 
       $.get(pathURI(path.id)).then((data) => {
         const units = data.data;
@@ -295,7 +293,7 @@
         submissions: {}
       };
 
-      submissions.map((submission) => {
+      submissions.forEach((submission) => {
         submission.href = `https://newline.theironyard.com/admin/assignment_submissions/${submission.id}`;
         const assignment = assignments.find(a => a.id === submission.assignment.id);
 
