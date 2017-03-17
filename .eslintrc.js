@@ -7,6 +7,9 @@ module.exports = {
         "browser": true,
     },
     "rules": {
-        "comma-dangle": "off"
+        "indent": ["error", 2],
+        "comma-dangle": "off",
+        "no-param-reassign": "off",
+        "no-use-before-define": "off"
     }
 };

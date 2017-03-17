@@ -47,9 +47,7 @@
     'retracted'
   ];
 
-  const slice = c => [].slice.call(c);
-
-    // Behavior ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+  // Behavior ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   function main(sessionData, $el) {
     $($el).on('showing', () => {
@@ -61,8 +59,8 @@
     let gradebooks;
     try {
       gradebooks = JSON.parse(
-              localStorage.getItem('cachedGradeBookData')
-          );
+        localStorage.getItem('cachedGradeBookData')
+      );
     } catch (e) {}
     gradebooks = gradebooks || {};
     return gradebooks;
@@ -72,8 +70,8 @@
     let session;
     try {
       session = JSON.parse(
-              localStorage.getItem('cachedGradeBookDataSession')
-          );
+        localStorage.getItem('cachedGradeBookDataSession')
+      );
     } catch (e) {}
     session = session || { path: null };
     return session;
@@ -85,9 +83,8 @@
     }
 
     const cachedSession = loadCachedSession();
-    console.log(sessionData, cachedSession);
     if (sessionData.path === null && cachedSession.path === null) {
-            // Provide feedback to the user that we can't handle this.
+      // Provide feedback to the user that we can't handle this.
       $el.text('Have you visited a path recently, we don\'t know what gradebook you want to see, go to a path you own and try again?!');
       return;
     } else if (sessionData.path === null && cachedSession.path !== null) {
@@ -97,17 +94,17 @@
     }
 
     const gradebooks = loadCachedGradebooks();
-    const gradebook_data = gradebooks[sessionData.path.id];
+    const gradebookData = gradebooks[sessionData.path.id];
 
     resetUI(sessionData, $el);
 
-    if (gradebook_data) {
+    if (gradebookData) {
       try {
         buildUI(
-                    sessionData,
-                    $el,
-                    gradebook_data
-                );
+          sessionData,
+          $el,
+          gradebookData
+        );
       } catch (e) {
         localStorage.removeItem('cachedGradeBookData');
       }
@@ -131,12 +128,12 @@
       });
     } catch (e) {
       console.warn(e);
-            // Wrap in try catch to show UI to user that something went wrong ( user permissions? )
+      // Wrap in try catch to show UI to user that something went wrong ( user permissions? )
       $el.text('There was a problem getting all the data for this gradebooks, do you own this path?!');
     }
   }
 
-    // UI ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+  // UI ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   function resetUI(sessionData, $el) {
     $el.html('');
@@ -146,18 +143,19 @@
       getGradebook(sessionData, $el);
     });
 
-    $el.find('tbody')
-            .on('click', 'td.grade-percent', function () {
-              $(this).parent().siblings('tr').toggle();
-            });
+    $el
+      .find('tbody')
+      .on('click', 'td.grade-percent', () => $(this).parent().siblings('tr').toggle());
   }
 
   function buildUI(sessionData, $el, gradebook) {
     const students = gradebook.students;
     const assignments = gradebook.assignments;
     const $table = $el.find('table');
-    $table.find('thead')
-            .append(buildAssignmentsHeader(assignments));
+
+    $table
+      .find('thead')
+      .append(buildAssignmentsHeader(assignments));
 
     const orderedStudents = Object.keys(students).sort();
     for (const studentId of orderedStudents) {
@@ -184,12 +182,12 @@
 
     for (const assignment of assignments) {
       row.append(`
-              <th data-tooltip='${assignment.title}'>
-                <a href='${assignment.href}' title='${assignment.title}' class="title">
-                  ${assignment.title.slice(0, 1)}
-                </a>
-              </th>
-            `);
+        <th data-tooltip='${assignment.title}'>
+          <a href='${assignment.href}' title='${assignment.title}' class="title">
+            ${assignment.title.slice(0, 1)}
+          </a>
+        </th>
+      `);
     }
 
     return row;
@@ -209,8 +207,8 @@
         );
 
     studentRow.append(
-            `<td class='grade-percent' title='Click here to toggle other student grades visibility'>${student.percentage}%</td>`
-        );
+      `<td class='grade-percent' title='Click here to toggle other student grades visibility'>${student.percentage}%</td>`
+    );
 
     for (const assignment of assignments) {
       const submission = student.submissions[assignment.id];
@@ -233,27 +231,26 @@
 
     return studentRow;
   }
-    // Data Management +++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+  // Data Management +++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   function calculateGrades(students, assignments) {
     if (!students) {
-      return;
+      return false;
     }
 
-        // Question, What is the the best practice for building an uniq array
-        // of objects in JS.
-    Object.keys(students).map((studentName) => {
+    // Question, What is the the best practice for building an uniq array
+    // of objects in JS.
+    return Object.keys(students).map((studentName) => {
       const student = students[studentName];
 
       const submissions = Object.keys(student.submissions);
-
-      const okCount = submissions.filter(assignmentId => OK_GRADES.includes(student.submissions[assignmentId].status));
-
-      const grade = okCount.length / assignments.length * 100;
-
+      const okCount = submissions.filter((assignmentId) => {
+        return OK_GRADES.includes(student.submissions[assignmentId].status);
+      });
+      const grade = (okCount.length / assignments.length) * 100;
       student.percentage = grade.toFixed(0);
+      return student;
     });
-    return students;
   }
 
   function getPathContent(path) {
@@ -261,13 +258,13 @@
 
     class Content {
       constructor(data) {
-            // Build an object that has the exposed properties of the parent content while adding functionality
-            // TODO: This seems like something that is common, better way?
+        // Build an object that has the exposed properties of the parent content while adding functionality
+        // TODO: This seems like something that is common, better way?
         Object.keys(data).forEach(k => this[k] = data[k]);
         this.href = `/admin/${this.type.toLowerCase()}/${this.id}`;
         this.first_submission_at = null;
       }
-      }
+    }
 
     return new Promise((res, rej) => {
       const flatten = a => Array.isArray(a) ? [].concat(...a.map(flatten)) : a;
@@ -277,11 +274,8 @@
         const contents = flatten(units.map(el => el.contents));
         path.content = {
           units,
-          assignments: contents
-                    .filter(el => el.type == 'Assignment')
-                    .filter(el => el.type == 'Assignment')
-                    .map(el => new Content(el)),
-          lessons: contents.filter(el => el.type == 'Lesson').map(el => new Content(el)),
+          assignments: contents.filter(el => el.type === 'Assignment').map(el => new Content(el)),
+          lessons: contents.filter(el => el.type === 'Lesson').map(el => new Content(el)),
         };
         res(path);
       }).fail(err => rej(err));
@@ -298,12 +292,11 @@
         id: studentId,
         name,
         percentage: null,
-        submissions: {},
+        submissions: {}
       };
 
       submissions.map((submission) => {
-        const studentSubmissionPath = `https://newline.theironyard.com/admin/assignment_submissions/${submission.id}`;
-        const assignmentPath = `https://newline.theironyard.com/admin/assignments/${submission.assignment.id}`;
+        submission.href = `https://newline.theironyard.com/admin/assignment_submissions/${submission.id}`;
         const assignment = assignments.find(a => a.id === submission.assignment.id);
 
         if (assignment) {
@@ -352,10 +345,12 @@
 
         Promise.all(s.map(s => new Promise((res) => {
           loadAssingments(userSubmissionURI(s.id), [], 1)
-                  .then(data => res(scrapeStudentPage(students, assignments, userSubmissionURI(s.id), data)));
+            .then((data) => {
+              res(scrapeStudentPage(students, assignments, userSubmissionURI(s.id), data));
+            });
         }))).then(() => {
-                  // Reject any assingments that have nothing turned in?
-                  // Thoughts, this could use hidden state?
+          // Reject any assingments that have nothing turned in?
+          // Thoughts, this could use hidden state?
           const submittedAssingments = assignments.filter(el => el.first_submission_at !== null);
 
           submittedAssingments.sort((a, b) => new Date(b.first_submission_at) - new Date(a.first_submission_at));
