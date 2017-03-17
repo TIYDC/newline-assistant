@@ -29,28 +29,25 @@
       `;
 
   const SHORT_GRADE_NAMES = {
-    'Exceeds expectations': 'E',
-    'Complete and satisfactory': 'S',
-    'Complete and unsatisfactory': 'U',
-    Incomplete: 'I',
-    'Not graded': 'G',
-    Retracted: 'R'
+    exceeds_expectations: 'E',
+    complete_and_satisfactory: 'S',
+    complete_and_unsatisfactory: 'U',
+    incomplete: 'I',
+    not_graded: 'G',
+    retracted: 'R',
   };
 
   const OK_GRADES = [
-    'Complete and satisfactory',
-    'Exceeds expectations',
-    'Not graded'
+    'complete_and_satisfactory',
+    'exceeds_expectations',
+    'not_graded',
   ];
 
   const IGNORED_GRADES = [
-    'Retracted'
+    'retracted'
   ];
 
-  const PARSING_TIME_FORMAT = 'MMM DD, YYYY hh:mm A';
   const slice = c => [].slice.call(c);
-  const qs = (el, s) => el.querySelector(s);
-  const qsa = (el, s) => slice(el.querySelectorAll(s));
 
     // Behavior ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
@@ -219,12 +216,12 @@
       const submission = student.submissions[assignment.id];
 
       if (submission) {
-        const gradeClass = SHORT_GRADE_NAMES[submission.grade].toLowerCase();
+        const gradeClass = SHORT_GRADE_NAMES[submission.status].toLowerCase();
         studentRow.append(
                     `
                   <td class='grade ${gradeClass}' date-tooltip='${assignment.title}' >
                     <a href='${submission.href}' title='${assignment.title}' target='blank' >
-                      ${SHORT_GRADE_NAMES[submission.grade]}
+                      ${SHORT_GRADE_NAMES[submission.status]}
                     </a>
                   </td>
                   `
@@ -236,10 +233,7 @@
 
     return studentRow;
   }
-
     // Data Management +++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
-  const idFromUrl = uri => Number(uri.substr(uri.lastIndexOf('/') + 1));
 
   function calculateGrades(students, assignments) {
     if (!students) {
@@ -253,113 +247,74 @@
 
       const submissions = Object.keys(student.submissions);
 
-      const okCount = submissions.filter(assignmentId => OK_GRADES.includes(student.submissions[assignmentId].grade));
+      const okCount = submissions.filter(assignmentId => OK_GRADES.includes(student.submissions[assignmentId].status));
 
       const grade = okCount.length / assignments.length * 100;
+
       student.percentage = grade.toFixed(0);
     });
     return students;
   }
 
   function getPathContent(path) {
-    const pathURI = id => `https://newline.theironyard.com/admin/paths/${id}`;
+    const pathURI = id => `https://newline.theironyard.com/api/paths/${id}/contents`;
+
+    class Content {
+      constructor(data) {
+            // Build an object that has the exposed properties of the parent content while adding functionality
+            // TODO: This seems like something that is common, better way?
+        Object.keys(data).forEach(k => this[k] = data[k]);
+        this.href = `/admin/${this.type.toLowerCase()}/${this.id}`;
+        this.first_submission_at = null;
+      }
+      }
 
     return new Promise((res, rej) => {
-      if (/\/admin\/paths\/[0-9]+/.test(window.location.pathname)) {
-        path.content = scrapePathContent(document);
-        res(path);
-      } else {
-        $.get(pathURI(path.id)).then((html) => {
-          const dom = document.createElement('html');
-          dom.innerHTML = html;
-          path.content = scrapePathContent(dom);
-          res(path);
-        }).fail(err => rej(err));
-      }
-    });
-  }
+      const flatten = a => Array.isArray(a) ? [].concat(...a.map(flatten)) : a;
 
-  function scrapePathContent(dom) {
-    const allContent = {
-      assignments: [],
-      lessons: [],
-      units: []
-    };
-
-    qsa(dom, '.path-tree-level').forEach((x) => {
-        // Anything that has a GID has been persisted by Rails.
-      const gid = x.getAttribute('data-id');
-
-      if (gid) {
-        const title = qs(x, 'a.text-body').innerText;
-        const href = qs(x, 'a.text-body').getAttribute('href');
-        const hidden = qs(x, '#hidden-state, #unit-hidden-state').getAttribute('checked');
-        const type = gid.split('/')[3];
-        const id = gid.split('/')[4];
-
-        const content = {
-          id: Number(id),
-          type,
-          title,
-          href,
-          hidden_state: !!hidden,
-          gid,
-          first_submission_at: null
+      $.get(pathURI(path.id)).then((data) => {
+        const units = data.data;
+        const contents = flatten(units.map(el => el.contents));
+        path.content = {
+          units,
+          assignments: contents
+                    .filter(el => el.type == 'Assignment')
+                    .filter(el => el.type == 'Assignment')
+                    .map(el => new Content(el)),
+          lessons: contents.filter(el => el.type == 'Lesson').map(el => new Content(el)),
         };
-
-        if (type === 'Assignment') {
-          allContent.assignments.push(content);
-        } else if (type === 'Lesson') {
-          allContent.lessons.push(content);
-        } else if (type === 'Unit') {
-          allContent.units.push(content);
-        }
-      }
+        res(path);
+      }).fail(err => rej(err));
     });
-    console.log('Path Content:', allContent);
-    return allContent;
   }
 
   function scrape(sessionData, callback) {
-    const userURI = id => `https://newline.theironyard.com/admin/users/${id}`;
-
-    function scrapeStudentPage(students, assignments, url, html) {
-      const studentPage = document.createElement('html');
-      studentPage.innerHTML = html;
-
-      const name = qs(studentPage, 'h1 strong').innerText;
-      const studentId = idFromUrl(url);
+    const userSubmissionURI = id => `https://newline.theironyard.com/api/assignment_submissions?student_id=${id}`;
+    function scrapeStudentPage(students, assignments, url, submissions) {
+      const name = submissions[0].student.name;
+      const studentId = submissions[0].student.id;
 
       students[studentId] = {
         id: studentId,
         name,
         percentage: null,
-        submissions: {}
+        submissions: {},
       };
 
-      qsa(studentPage, '#assignments table tbody tr').map((row) => {
-        const studentSubmissionPath = qs(qsa(row, 'td')[1], 'a').getAttribute('href');
-        const assignmentPath = qs(row, 'td a').getAttribute('href');
-        const submission = {
-          id: idFromUrl(studentSubmissionPath),
-          grade: qs(qsa(row, 'td')[2], 'label').innerText.trim(),
-          href: studentSubmissionPath,
-          submitted_at: moment(qsa(row, 'td')[3].innerText.trim(), PARSING_TIME_FORMAT),
-          assignment: null
-        };
-
-        const assignmentId = idFromUrl(assignmentPath);
-        const assignment = assignments.find(a => a.id === assignmentId);
+      submissions.map((submission) => {
+        const studentSubmissionPath = `https://newline.theironyard.com/admin/assignment_submissions/${submission.id}`;
+        const assignmentPath = `https://newline.theironyard.com/admin/assignments/${submission.assignment.id}`;
+        const assignment = assignments.find(a => a.id === submission.assignment.id);
 
         if (assignment) {
-          if (assignment.first_submission_at === null || submission.submitted_at < assignment.first_submission_at) {
-            assignment.first_submission_at = submission.submitted_at;
+          if (assignment.first_submission_at === null || submission.created_at < assignment.first_submission_at) {
+            assignment.first_submission_at = submission.created_at;
           }
 
-          if (!IGNORED_GRADES.includes(submission.grade)) {
+          if (!IGNORED_GRADES.includes(submission.status)) {
             submission.assignment = assignment;
             const existingSubmission = students[studentId].submissions[assignment.id];
-            if (!(existingSubmission && existingSubmission.submitted_at > submission.submitted_at)) {
+            if (!(existingSubmission && existingSubmission.created_at > submission.created_at)) {
               students[studentId].submissions[assignment.id] = submission;
             }
           }
@@ -374,12 +329,30 @@
     Promise.all([getPathContent(sessionData.path)]).then(([pathWithContent]) => {
       sessionData.path = pathWithContent;
 
+      const loadAssingments = (uri, assingments, page) => new Promise((res, rej) => {
+        const settings = {
+          async: true,
+          crossDomain: true,
+          url: `${uri}&page=${page}`,
+          method: 'GET',
+        };
+        $.get(settings).done((response) => {
+          assingments = [...assingments, ...response.data];
+          if (response.meta.total_pages <= page) {
+            res(assingments);
+          } else {
+            res(loadAssingments(uri, assingments, page + 1));
+          }
+        });
+      });
+
       Promise.all([sessionData.students]).then(([s]) => {
         let students = {};
         const assignments = sessionData.path.content.assignments;
 
         Promise.all(s.map(s => new Promise((res) => {
-          $.get(userURI(s.id)).then(html => res(scrapeStudentPage(students, assignments, userURI(s.id), html)));
+          loadAssingments(userSubmissionURI(s.id), [], 1)
+                  .then(data => res(scrapeStudentPage(students, assignments, userSubmissionURI(s.id), data)));
         }))).then(() => {
                   // Reject any assingments that have nothing turned in?
                   // Thoughts, this could use hidden state?
