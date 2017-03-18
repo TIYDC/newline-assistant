@@ -190,7 +190,7 @@
     });
 
     $el.find('#path-title').html(
-          `<a href='/admin/paths/${sessionData.path.id}'>
+      `<a href='/admin/paths/${sessionData.path.id}'>
           ${gradebook.title}
           </a>`);
     $el.find('#last-scraped').text(moment(gradebook.scraped_at).fromNow());
@@ -218,14 +218,14 @@
     const studentRow = $('<tr>');
 
     studentRow.append(
-            `
+      `
             <td>
                 <a href='/admin/users/${student.id}' title='Grade: ${student.percentage}%'>
                 ${student.name}
                 </a>
             </td>
             `
-        );
+    );
 
     studentRow.append(
       `<td class='grade-percent' title='Click here to toggle other student grades visibility'>${student.percentage}%</td>`
@@ -244,7 +244,7 @@
             </a>
           </td>
           `
-          );
+        );
       } else {
         studentRow.append('<td></td>');
       }
@@ -265,7 +265,7 @@
       const student = students[studentName];
 
       const submissions = Object.keys(student.submissions);
-      const okCount = submissions.filter((id) => OK_GRADES.includes(student.submissions[id].status));
+      const okCount = submissions.filter(id => OK_GRADES.includes(student.submissions[id].status));
       const grade = (okCount.length / assignments.length) * 100;
       student.percentage = grade.toFixed(0);
       return student;
@@ -277,7 +277,8 @@
 
     class Content {
       constructor(data) {
-        // Build an object that has the exposed properties of the parent content while adding functionality
+        // Build an object that has the exposed properties of the parent
+        // content while adding functionality
         // TODO: This seems like something that is common, better way?
         Object.keys(data).forEach((k) => { this[k] = data[k]; });
         this.href = `/admin/${this.type.toLowerCase()}/${this.id}`;
