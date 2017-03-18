@@ -201,7 +201,7 @@
     row.append($('<th>').append('Student'));
     row.append($('<th>').append('Grade'));
 
-    for (const assignment of assignments) {
+    assignments.forEach((assignment) => {
       row.append(`
         <th data-tooltip='${assignment.title}'>
           <a href='${assignment.href}' title='${assignment.title}' class="title">
@@ -209,7 +209,7 @@
           </a>
         </th>
       `);
-    }
+    });
 
     return row;
   }
@@ -231,7 +231,7 @@
       `<td class='grade-percent' title='Click here to toggle other student grades visibility'>${student.percentage}%</td>`
     );
 
-    for (const assignment of assignments) {
+    assignments.forEach((assignment) => {
       const submission = student.submissions[assignment.id];
 
       if (submission) {
@@ -248,7 +248,7 @@
       } else {
         studentRow.append('<td></td>');
       }
-    }
+    });
 
     return studentRow;
   }
