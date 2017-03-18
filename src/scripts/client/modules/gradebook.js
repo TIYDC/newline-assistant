@@ -319,7 +319,9 @@
         const assignment = assignments.find(a => a.id === submission.assignment.id);
 
         if (assignment) {
-          if (assignment.first_submission_at === null || submission.created_at < assignment.first_submission_at) {
+          const noSubmission = assignment.first_submission_at === null;
+          const newerSubmission = submission.created_at < assignment.first_submission_at;
+          if (noSubmission || newerSubmission) {
             assignment.first_submission_at = submission.created_at;
           }
 
