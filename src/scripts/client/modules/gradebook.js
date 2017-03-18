@@ -1,4 +1,4 @@
-(function (tiy, $, moment) {
+(function gradebookModule(tiy, $, moment) {
   tiy.loadModule({
     name: 'gradebook',
     navIcon: 'fa-book',
