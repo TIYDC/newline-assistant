@@ -81,24 +81,25 @@
     return session;
   }
 
-  function recurseOverCollection(uri, collection, page){
-    new Promise((res) => {
-    const settings = {
-      async: true,
-      crossDomain: true,
-      url: `${uri}&page=${page}`,
-      method: 'GET',
-    };
+  function recurseOverCollection(uri, collection, page) {
+    return new Promise((res) => {
+      const settings = {
+        async: true,
+        crossDomain: true,
+        url: `${uri}&page=${page}`,
+        method: 'GET',
+      };
 
-    $.get(settings).done((response) => {
-      collection = [...collection, ...response.data];
-      if (response.meta.total_pages <= page) {
-        res(collection);
-      } else {
-        res(recurseOverCollection(uri, collection, page + 1));
-      }
+      $.get(settings).done((response) => {
+        collection = [...collection, ...response.data];
+        if (response.meta.total_pages <= page) {
+          res(collection);
+        } else {
+          res(recurseOverCollection(uri, collection, page + 1));
+        }
+      });
     });
-  });
+  }
 
   function show(sessionData, $el) {
     if (uiBuilt) {
@@ -374,6 +375,5 @@
         callback(gradebook);
       });
     });
-
   }
 }(window.tiy || {}, window.jQuery, window.moment));
