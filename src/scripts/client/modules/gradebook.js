@@ -303,7 +303,7 @@
 
   function scrape(sessionData, callback) {
     const userSubmissionURI = id => `https://newline.theironyard.com/api/assignment_submissions?student_id=${id}`;
-    function scrapeStudentPage(students, assignments, url, submissions) {
+    function extractStudentData(students, assignments, url, submissions) {
       const name = submissions[0].student.name;
       const studentId = submissions[0].student.id;
 
