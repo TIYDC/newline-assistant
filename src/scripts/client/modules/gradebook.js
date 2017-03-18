@@ -61,7 +61,9 @@
       gradebooks = JSON.parse(
         localStorage.getItem('cachedGradeBookData')
       );
-    } catch (e) {}
+    } catch (e) {
+      console.warn('Failed to restore gradebook data from localStorage');
+    }
     gradebooks = gradebooks || {};
     return gradebooks;
   }
@@ -72,7 +74,9 @@
       session = JSON.parse(
         localStorage.getItem('cachedGradeBookDataSession')
       );
-    } catch (e) {}
+    } catch (e) {
+      console.warn('Failed to restore gradebook session data from localStorage');
+    }
     session = session || { path: null };
     return session;
   }
