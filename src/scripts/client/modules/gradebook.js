@@ -81,6 +81,25 @@
     return session;
   }
 
+  function recurseOverCollection(uri, collection, page){
+    new Promise((res) => {
+    const settings = {
+      async: true,
+      crossDomain: true,
+      url: `${uri}&page=${page}`,
+      method: 'GET',
+    };
+
+    $.get(settings).done((response) => {
+      collection = [...collection, ...response.data];
+      if (response.meta.total_pages <= page) {
+        res(collection);
+      } else {
+        res(recurseOverCollection(uri, collection, page + 1));
+      }
+    });
+  });
+
   function show(sessionData, $el) {
     if (uiBuilt) {
       return;
@@ -322,55 +341,38 @@
     Promise.all([getPathContent(sessionData.path)]).then(([pathWithContent]) => {
       sessionData.path = pathWithContent;
 
-      const loadAssingments = (uri, assingments, page) => new Promise((res, rej) => {
-        const settings = {
-          async: true,
-          crossDomain: true,
-          url: `${uri}&page=${page}`,
-          method: 'GET',
+      let students = {};
+      const assignments = sessionData.path.content.assignments;
+
+      Promise.all(sessionData.students.map(s => new Promise((res) => {
+        recurseOverCollection(userSubmissionURI(s.id), [], 1)
+          .then((data) => {
+            res(extractStudentData(students, assignments, userSubmissionURI(s.id), data));
+          });
+      }))).then(() => {
+        // Reject any assingments that have nothing turned in?
+        // Thoughts, this could use hidden state?
+        const submittedAssingments = assignments
+          .filter(el => el.first_submission_at !== null)
+          // Newest submissions
+          .sort((a, b) => new Date(b.first_submission_at) - new Date(a.first_submission_at));
+
+        students = calculateGrades(students, submittedAssingments);
+        const gradebook = {
+          id: sessionData.path.id,
+          title: sessionData.path.title,
+          students,
+          assignments: submittedAssingments,
+          scraped_at: moment()
         };
-        $.get(settings).done((response) => {
-          assingments = [...assingments, ...response.data];
-          if (response.meta.total_pages <= page) {
-            res(assingments);
-          } else {
-            res(loadAssingments(uri, assingments, page + 1));
-          }
-        });
-      });
+        const gradebooks = loadCachedGradebooks();
 
-      Promise.all([sessionData.students]).then(([s]) => {
-        let students = {};
-        const assignments = sessionData.path.content.assignments;
+        gradebooks[sessionData.path.id] = gradebook;
 
-        Promise.all(s.map(s => new Promise((res) => {
-          loadAssingments(userSubmissionURI(s.id), [], 1)
-            .then((data) => {
-              res(scrapeStudentPage(students, assignments, userSubmissionURI(s.id), data));
-            });
-        }))).then(() => {
-          // Reject any assingments that have nothing turned in?
-          // Thoughts, this could use hidden state?
-          const submittedAssingments = assignments.filter(el => el.first_submission_at !== null);
-
-          submittedAssingments.sort((a, b) => new Date(b.first_submission_at) - new Date(a.first_submission_at));
-
-          students = calculateGrades(students, submittedAssingments);
-          const gradebook = {
-            id: sessionData.path.id,
-            title: sessionData.path.title,
-            students,
-            assignments: submittedAssingments,
-            scraped_at: moment()
-          };
-          const gradebooks = loadCachedGradebooks();
-
-          gradebooks[sessionData.path.id] = gradebook;
-
-          localStorage.setItem('cachedGradeBookData', JSON.stringify(gradebooks));
-          callback(gradebook);
-        });
+        localStorage.setItem('cachedGradeBookData', JSON.stringify(gradebooks));
+        callback(gradebook);
       });
     });
+
   }
 }(window.tiy || {}, window.jQuery, window.moment));
