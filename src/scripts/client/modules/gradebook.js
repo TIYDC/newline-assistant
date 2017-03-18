@@ -286,11 +286,9 @@
     }
 
     return new Promise((res, rej) => {
-      const flatten = (a) => Array.isArray(a) ? [].concat(...a.map(flatten)) : a;
-
       $.get(pathURI(path.id)).then((data) => {
         const units = data.data;
-        const contents = flatten(units.map(el => el.contents));
+        const contents = [].concat(...units.map(el => el.contents));
         path.content = {
           units,
           assignments: contents.filter(el => el.type === 'Assignment').map(el => new Content(el)),
