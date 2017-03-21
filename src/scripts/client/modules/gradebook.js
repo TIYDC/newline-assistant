@@ -90,7 +90,7 @@
         method: 'GET',
       };
 
-      $.get(settings).done((response) => {
+      $.get(settings).done(function(response) {
         collection = [...collection, ...response.data];
         if (response.meta.total_pages <= page) {
           res(collection);
@@ -163,13 +163,15 @@
     $el.html('');
     $el.append(TABLE_TEMPLATE);
 
-    $('#generate-score-card').click(() => {
+    $('#generate-score-card').click(function(){
       getGradebook(sessionData, $el);
     });
 
     $el
       .find('tbody')
-      .on('click', 'td.grade-percent', () => $(this).parent().siblings('tr').toggle());
+      .on('click', 'td.grade-percent', function() {
+        $(this).parent().siblings('tr').toggle();
+      });
   }
 
   function buildUI(sessionData, $el, gradebook) {
@@ -186,14 +188,16 @@
       .filter(s => sessionData.user.user_id !== s.id)
       .sort((a, b) => parseInt(b.percentage, 10) - parseInt(a.percentage, 10));
 
-    onlyStudents.forEach((student) => {
+    onlyStudents.forEach(function(student){
       $table.append(buildStudentRow(student, assignments));
     });
 
     $el.find('#path-title').html(
       `<a href='/admin/paths/${sessionData.path.id}'>
           ${gradebook.title}
-          </a>`);
+       </a>
+      `
+    );
     $el.find('#last-scraped').text(moment(gradebook.scraped_at).fromNow());
   }
 
@@ -202,7 +206,7 @@
     row.append($('<th>').append('Student'));
     row.append($('<th>').append('Grade'));
 
-    assignments.forEach((assignment) => {
+    assignments.forEach(function(assignment) {
       row.append(`
         <th data-tooltip='${assignment.title}'>
           <a href='${assignment.href}' title='${assignment.title}' class="title">
@@ -232,7 +236,7 @@
       `<td class='grade-percent' title='Click here to toggle other student grades visibility'>${student.percentage}%</td>`
     );
 
-    assignments.forEach((assignment) => {
+    assignments.forEach(function(assignment) {
       const submission = student.submissions[assignment.id];
 
       if (submission) {
@@ -262,7 +266,7 @@
 
     // Question, What is the the best practice for building an uniq array
     // of objects in JS.
-    return Object.keys(students).map((studentName) => {
+    return Object.keys(students).map(function(studentName) {
       const student = students[studentName];
 
       const submissions = Object.keys(student.submissions);
@@ -287,8 +291,8 @@
       }
     }
 
-    return new Promise((res, rej) => {
-      $.get(pathURI(path.id)).then((data) => {
+    return new Promise(function(res, rej) {
+      $.get(pathURI(path.id)).then(function(data) {
         const units = data.data;
         const contents = [].concat(...units.map(el => el.contents));
         path.content = {
@@ -314,7 +318,7 @@
         submissions: {}
       };
 
-      submissions.forEach((submission) => {
+      submissions.forEach(function(submission) {
         submission.href = `https://newline.theironyard.com/admin/assignment_submissions/${submission.id}`;
         const assignment = assignments.find(a => a.id === submission.assignment.id);
 
