@@ -81,13 +81,16 @@
     return session;
   }
 
+  /**
+     Given any newline uri make an initial request, detect if there are more pages, if they are re curse and build a complete collection.
+  **/
   function recurseOverCollection(uri, collection, page) {
     return new Promise((res) => {
       const settings = {
         async: true,
         crossDomain: true,
         url: `${uri}&page=${page}`,
-        method: 'GET',
+        method: 'GET'
       };
 
       $.get(settings).done(function(response) {
