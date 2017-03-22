@@ -49,13 +49,13 @@
 
   class Content {
     constructor(data) {
-        // Build an object that has the exposed properties of the parent
-        // content while adding functionality
-        // TODO: This seems like something that is common, better way?
-        Object.keys(data).forEach((k) => { this[k] = data[k]; });
-        this.href = `/admin/${this.type.toLowerCase()}/${this.id}`;
-        this.first_submission_at = null;
-      }
+      // Build an object that has the exposed properties of the parent
+      // content while adding functionality
+      // TODO: This seems like something that is common, better way?
+      Object.keys(data).forEach((k) => { this[k] = data[k]; });
+      this.href = `/admin/${this.type.toLowerCase()}/${this.id}`;
+      this.first_submission_at = null;
+    }
   }
 
   // Behavior ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -93,7 +93,7 @@
   }
 
   /**
-  Given any newline uri make an initial request, detect if there are more pages, 
+  Given any newline uri make an initial request, detect if there are more pages,
   if they are re curse and build a complete collection.
   **/
   function recurseOverCollection(uri, collection, page) {
@@ -178,7 +178,7 @@
     $el.html('');
     $el.append(TABLE_TEMPLATE);
 
-    $('#generate-score-card').click(function (){
+    $('#generate-score-card').click(function () {
       getGradebook(sessionData, $el);
     });
 
@@ -203,7 +203,7 @@
       .filter(s => sessionData.user.user_id !== s.id)
       .sort((a, b) => parseInt(b.percentage, 10) - parseInt(a.percentage, 10));
 
-    onlyStudents.forEach(function (student){
+    onlyStudents.forEach(function (student) {
       $table.append(buildStudentRow(student, assignments));
     });
 
