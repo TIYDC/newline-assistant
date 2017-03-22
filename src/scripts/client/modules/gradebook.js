@@ -149,7 +149,7 @@
     $('#generate-score-card').text('Processing').attr('disabled', true);
 
     try {
-      scrape(sessionData, (gradebook) => {
+      scrape(sessionData, function(gradebook) {
         resetUI(sessionData, $el);
         buildUI(sessionData, $el, gradebook);
       });
