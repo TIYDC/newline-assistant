@@ -11,6 +11,7 @@ module.exports = {
         "comma-dangle": "off",
         "no-param-reassign": "off",
         "no-use-before-define": "off", 
-        "no-console": "off"
+        "no-console": "off",
+        "prefer-arrow-callback": "off"
     }
 };
