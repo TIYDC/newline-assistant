@@ -201,7 +201,7 @@
     // Never display the instructor in the gradebook
     const onlyStudents = students
       .filter(s => sessionData.user.user_id !== s.id)
-      .sort((a, b) => parseInt(b.percentage, 10) - parseInt(a.percentage, 10));
+      .sort((a, b) => ((a.name < b.name) ? -1 : 1));
 
     onlyStudents.forEach(function addStudentRowElement(student) {
       $table.append(buildStudentRow(student, assignments));
