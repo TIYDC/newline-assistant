@@ -47,6 +47,17 @@
     'retracted'
   ];
 
+  class Content {
+    constructor(data) {
+        // Build an object that has the exposed properties of the parent
+        // content while adding functionality
+        // TODO: This seems like something that is common, better way?
+        Object.keys(data).forEach((k) => { this[k] = data[k]; });
+        this.href = `/admin/${this.type.toLowerCase()}/${this.id}`;
+        this.first_submission_at = null;
+      }
+  }
+
   // Behavior ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   function main(sessionData, $el) {
@@ -82,7 +93,8 @@
   }
 
   /**
-     Given any newline uri make an initial request, detect if there are more pages, if they are re curse and build a complete collection.
+  Given any newline uri make an initial request, detect if there are more pages, 
+  if they are re curse and build a complete collection.
   **/
   function recurseOverCollection(uri, collection, page) {
     return new Promise((res) => {
@@ -282,18 +294,6 @@
 
   function getPathContent(path) {
     const pathURI = id => `https://newline.theironyard.com/api/paths/${id}/contents`;
-
-    class Content {
-      constructor(data) {
-        // Build an object that has the exposed properties of the parent
-        // content while adding functionality
-        // TODO: This seems like something that is common, better way?
-        Object.keys(data).forEach((k) => { this[k] = data[k]; });
-        this.href = `/admin/${this.type.toLowerCase()}/${this.id}`;
-        this.first_submission_at = null;
-      }
-    }
-
     return new Promise(function(res, rej) {
       $.get(pathURI(path.id)).then(function(data) {
         const units = data.data;
