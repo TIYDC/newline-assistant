@@ -61,7 +61,7 @@
   // Behavior ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   function main(sessionData, $el) {
-    $($el).on('showing', () => {
+    $($el).on('showing', function renderView() {
       show(sessionData, $el);
     });
   }
@@ -97,7 +97,7 @@
   if they are re curse and build a complete collection.
   **/
   function recurseOverCollection(uri, collection, page) {
-    return new Promise((res) => {
+    return new Promise(function collectCollections(res) {
       const settings = {
         async: true,
         crossDomain: true,
