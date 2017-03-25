@@ -161,7 +161,7 @@
     $('#generate-score-card').text('Processing').attr('disabled', true);
 
     try {
-      scrape(sessionData, function updateGUI(gradebook) {
+      getPathStudentAndAssignmentData(sessionData, function updateGUI(gradebook) {
         resetUI(sessionData, $el);
         buildUI(sessionData, $el, gradebook);
       });
@@ -308,7 +308,7 @@
     });
   }
 
-  function scrape(sessionData, callback) {
+  function getPathStudentAndAssignmentData(sessionData, callback) {
     const userSubmissionURI = id => `https://newline.theironyard.com/api/assignment_submissions?student_id=${id}`;
     function extractStudentData(students, assignments, url, submissions) {
       const name = submissions[0].student.name;
