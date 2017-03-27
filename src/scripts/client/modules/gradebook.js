@@ -347,7 +347,8 @@
     if (sessionData.students.length === 0) {
       throw new Error('no students');
     }
-    Promise.all([getPathContent(sessionData.path)]).then(([pathWithContent]) => {
+
+    getPathContent(sessionData.path).then((pathWithContent) => {
       sessionData.path = pathWithContent;
 
       let students = {};
