@@ -18,7 +18,7 @@
           <tbody></tbody>
         </table>
       </section>
-      <br>
+
       <section class="actions">
         <button type="button" class="btn btn-secondary btn-sm" id="generate-score-card">
           <i class="fa fa-refresh"></i> Refresh Grades
