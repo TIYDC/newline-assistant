@@ -1,3 +1,4 @@
+
 (function gradebookModule(tiy, $, moment) {
   tiy.loadModule({
     name: 'gradebook',
@@ -97,7 +98,7 @@
   if they are re curse and build a complete collection.
   **/
   function recurseOverCollection(uri, collection, page) {
-    return new Promise(function collectCollections(res) {
+    return new Promise(function collectCollections(res, reg) {
       const settings = {
         async: true,
         crossDomain: true,
@@ -105,14 +106,14 @@
         method: 'GET'
       };
 
-      $.get(settings).done(function handleCollectionRequest(response) {
+      $.get(settings).then(function handleCollectionRequest(response) {
         collection = [...collection, ...response.data];
         if (response.meta.total_pages <= page) {
           res(collection);
         } else {
           res(recurseOverCollection(uri, collection, page + 1));
         }
-      });
+      }).fail(err => reg(err));
     });
   }
 
