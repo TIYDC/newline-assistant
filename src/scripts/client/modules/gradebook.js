@@ -53,7 +53,7 @@
       // Build an object that has the exposed properties of the parent
       // content while adding functionality
       // TODO: This seems like something that is common, better way?
-      Object.keys(data).forEach((k) => { this[k] = data[k]; });
+      Object.keys(data).forEach(k => this[k] = data[k]);
       this.href = `/admin/${this.type.toLowerCase()}/${this.id}`;
       this.first_submission_at = null;
     }
@@ -349,19 +349,19 @@
       throw new Error('no students');
     }
 
-    getPathContent(sessionData.path).then((pathWithContent) => {
+    getPathContent(sessionData.path).then(function handleGetPathContent(pathWithContent) {
       sessionData.path = pathWithContent;
 
       let students = {};
       const assignments = sessionData.path.content.assignments;
 
-      Promise.all(sessionData.students.map(s => new Promise((res, rej) => {
+      Promise.all(sessionData.students.map(s => new Promise(function getStudentData(res, rej) {
         recurseOverCollection(userSubmissionURI(s.id), [], 1)
-          .then((data) => {
+          .then(function handleExtractedStudentData(data) {
             res(extractStudentData(students, assignments, userSubmissionURI(s.id), data));
           })
           .catch(err => rej(err));
-      }))).then(() => {
+      }))).then(function buildFinalGradebook(){
         // Reject any assingments that have nothing turned in?
         // Thoughts, this could use hidden state?
         const submittedAssingments = assignments
