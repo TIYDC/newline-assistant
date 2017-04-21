@@ -113,7 +113,7 @@
         } else {
           res(recurseOverCollection(uri, collection, page + 1));
         }
-      }).catch(err => rej(err));
+      }).fail(err => rej(err));
     });
   }
 
@@ -305,7 +305,7 @@
           lessons: contents.filter(el => el.type === 'Lesson').map(el => new Content(el)),
         };
         res(path);
-      }).catch(err => rej(err));
+      }).fail(err => rej(err));
     });
   }
 
