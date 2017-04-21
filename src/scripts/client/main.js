@@ -38,7 +38,7 @@
         })
         .then(function getMainUI(html) {
             navUI = $(html);
-            $('.main .row:first').append(navUI);
+            $('.main #page-title:first').append(navUI);
 
             modulesLoaded.forEach(addNavIcon);
             navUI.on('click', 'li', toggleModuleUI);
@@ -47,7 +47,7 @@
         })
         .then(function callModuleRenders(html) {
             mainUI = $(html);
-            $('.main .row:nth-child(2)').before(mainUI);
+            $('.main>.row:nth-child(2)').before(mainUI);
             uiLoaded = true;
 
             setupContentClose();
