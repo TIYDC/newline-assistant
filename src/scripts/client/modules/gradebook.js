@@ -98,7 +98,7 @@
   if they are re curse and build a complete collection.
   **/
   function recurseOverCollection(uri, collection, page) {
-    return new Promise(function collectCollections(res, reg) {
+    return new Promise(function collectCollections(res, rej) {
       const settings = {
         async: true,
         crossDomain: true,
@@ -113,7 +113,7 @@
         } else {
           res(recurseOverCollection(uri, collection, page + 1));
         }
-      }).fail(err => reg(err));
+      }).catch(err => rej(err));
     });
   }
 
@@ -305,7 +305,7 @@
           lessons: contents.filter(el => el.type === 'Lesson').map(el => new Content(el)),
         };
         res(path);
-      }).fail(err => rej(err));
+      }).catch(err => rej(err));
     });
   }
 
@@ -355,11 +355,12 @@
       let students = {};
       const assignments = sessionData.path.content.assignments;
 
-      Promise.all(sessionData.students.map(s => new Promise((res) => {
+      Promise.all(sessionData.students.map(s => new Promise((res, rej) => {
         recurseOverCollection(userSubmissionURI(s.id), [], 1)
           .then((data) => {
             res(extractStudentData(students, assignments, userSubmissionURI(s.id), data));
-          });
+          })
+          .catch(err => rej(err));
       }))).then(() => {
         // Reject any assingments that have nothing turned in?
         // Thoughts, this could use hidden state?
@@ -382,7 +383,8 @@
 
         localStorage.setItem('cachedGradeBookData', JSON.stringify(gradebooks));
         callback(gradebook);
-      });
+      })
+      .catch(err => console.error(err));
     });
   }
 }(window.tiy || {}, window.jQuery, window.moment));
