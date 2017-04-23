@@ -1,6 +1,6 @@
 {
   "name": "tiyo-assistant",
-  "version": "1.5.2",
+  "version": "1.5.3",
   "private": true,
   "description": "A simple in-browser assistant for instructors on Newline",
   "main": "build/tiyo-assistant.js",
